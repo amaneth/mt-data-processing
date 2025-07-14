@@ -11,7 +11,7 @@ import pandas as pd
 import numpy as np
 import re
 import csv
-
+import logging
 
 # display(df) works only if you are in IPython/Jupyter Notebooks or enable:
 #from IPython.display import display
@@ -19,28 +19,17 @@ import csv
 
 def rule_filter(source_texts, target_texts, source_lang, target_lang, lower=False):
     
-    # df_source = pd.read_csv(source_file, names=['Source'], sep="\0", quoting=csv.QUOTE_NONE, skip_blank_lines=False, on_bad_lines="skip")
-    # df_target = pd.read_csv(target_file, names=['Target'], sep="\0", quoting=csv.QUOTE_NONE, skip_blank_lines=False, on_bad_lines="skip")
-    # df = pd.concat([df_source, df_target], axis=1)  # Join the two dataframes along columns
-    # print("Dataframe shape (rows, columns):", df.shape)
-
     df = pd.DataFrame({"Source": source_texts, "Target": target_texts})
-
-
-
-    
+    logging.info(f"Rule filter started: initial rows = {df.shape[0]}")
+ 
     # Delete nan
     df = df.dropna()
-
-    print("--- Rows with Empty Cells Deleted\t--> Rows:", df.shape[0])
+    logging.info(f"Step: Drop NaN\t\t--> Rows: {df.shape[0]}")
 
 
     # Drop duplicates
     df = df.drop_duplicates()
-    #df = df.drop_duplicates(subset=['Target'])
-
-    print("--- Duplicates Deleted\t\t\t--> Rows:", df.shape[0])
-
+    logging.info(f"Step: Drop duplicates\t--> Rows: {df.shape[0]}")
 
     # Drop copy-source rows
     df["Source-Copied"] = df['Source'] == df['Target']
@@ -54,8 +43,7 @@ def rule_filter(source_texts, target_texts, source_lang, target_lang, lower=Fals
     
     df = df.reset_index()
     df = df.drop(['Source-Copied'], axis = 1)
-    
-    print("--- Source-Copied Rows Deleted\t\t--> Rows:", df.shape[0])
+    logging.info(f"Step: Drop identical rows\t--> Rows: {df.shape[0]}")
 
 
     # Drop too-long rows (source or target)
@@ -75,8 +63,7 @@ def rule_filter(source_texts, target_texts, source_lang, target_lang, lower=Fals
 
     df = df.reset_index()
     df = df.drop(['Too-Long'], axis = 1)
-
-    print("--- Too Long Source/Target Deleted\t--> Rows:", df.shape[0])
+    logging.info(f"Step: Drop too-long\t--> Rows: {df.shape[0]}")
 
 
     # Drop too-short rows (source or target)
@@ -93,8 +80,7 @@ def rule_filter(source_texts, target_texts, source_lang, target_lang, lower=Fals
 
     df = df.reset_index()
     df = df.drop(['Too-Short'], axis = 1)
-
-    print("--- Too Short Source/Target Deleted\t--> Rows:", df.shape[0])
+    logging.info(f"Step: Drop too-short\t--> Rows: {df.shape[0]}")
 
 
     # Remove HTML and normalize
@@ -103,47 +89,30 @@ def rule_filter(source_texts, target_texts, source_lang, target_lang, lower=Fals
 
     df = df.replace(r'<.*?>|&lt;.*?&gt;|&?(amp|nbsp|quot);|{}', ' ', regex=True)
     df = df.replace(r'  ', ' ', regex=True)  # replace double-spaces with one space
-
-    print("--- HTML Removed\t\t\t--> Rows:", df.shape[0])
+    logging.info(f"Step: Clean HTML\t--> Rows: {df.shape[0]}")
 
 
     # Lower-case the data
     if lower == True:
         df['Source'] = df['Source'].str.lower()
         df['Target'] = df['Target'].str.lower()
-
-        print("--- Rows are now lower-cased\t\t--> Rows:", df.shape[0])
+        logging.info("Step: Lowercased rows")
     else:
-        print("--- Rows will remain true-cased\t\t--> Rows:", df.shape[0])
+        logging.info("Step: Truecased rows retained")
 
 
     # Replace empty cells with NaN
     df = df.replace(r'^\s*$', np.nan, regex=True)
+    logging.info(f"Step: Drop new NaNs\t--> Rows: {df.shape[0]}")
 
     # Delete nan (already there, or generated from the previous steps)
     df = df.dropna()
-
-    print("--- Rows with Empty Cells Deleted\t--> Rows:", df.shape[0])
+    logging.info(f"Step: Shuffled rows\t--> Rows: {df.shape[0]}")
 
 
     # Shuffle the data
     df = df.sample(frac=1).reset_index(drop=True)
-    print("--- Rows Shuffled\t\t\t--> Rows:", df.shape[0])
-
-
-    # Write the dataframe to two Source and Target files
-    # source_file = source_file+'-filtered.'+source_lang
-    # target_file = target_file+'-filtered.'+target_lang
-
-
-    # Save source and target to two text files
-    # df_source = df["Source"]
-    # df_target = df["Target"]
-
-    # df_source.to_csv(source_file, header=False, index=False, quoting=csv.QUOTE_NONE, sep="\n")
-    # print("--- Source Saved:", source_file)
-    # df_target.to_csv(target_file, header=False, index=False, quoting=csv.QUOTE_NONE, sep="\n")
-    # print("--- Target Saved:", target_file)
+    logging.info(f"Step: Shuffled rows\t--> Rows: {df.shape[0]}")
 
     return df["Source"].tolist(), df["Target"].tolist()
 
@@ -157,6 +126,9 @@ def semantic_filter(
     chunk_size=1000,
 ):
     assert len(source_list) == len(target_list), "Source and target lists must be of the same length."
+    
+    logging.info("Semantic filter started")
+    logging.info(f"Total sentence pairs: {len(source_list)} | Threshold: {threshold} | Chunk size: {chunk_size}")
 
     model = load_model(srclang, tgtlang)
     pool = model.start_multi_process_pool()
@@ -165,7 +137,8 @@ def semantic_filter(
     filtered_target = []
 
     for i in range(0, len(source_list), chunk_size):
-        print(f"Processing lines {i}–{min(i + chunk_size, len(source_list))} ...", flush=True)
+        end_idx = min(i + chunk_size, len(source_list))
+        logging.info(f"Processing chunk: lines {i}–{end_idx}")
 
         chunk_src = source_list[i:i + chunk_size]
         chunk_tgt = target_list[i:i + chunk_size]
@@ -181,6 +154,7 @@ def semantic_filter(
                 filtered_target.append(tgt_text)
 
     model.stop_multi_process_pool(pool)
+    logging.info(f"Semantic filtering complete → Remaining: {len(filtered_source)} pairs")
     return filtered_source, filtered_target
 
     
@@ -217,7 +191,7 @@ def load_model(srclang, tgtlang):
     
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = SentenceTransformer(model_name, device=device, cache_folder=model_cache)
-    print("Model loaded:", model_name) 
+    logging.info(f"Loaded SentenceTransformer model: {model_name} on {device}")
     pool = model.start_multi_process_pool()
 
     return model
