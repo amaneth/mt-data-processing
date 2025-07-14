@@ -1,22 +1,31 @@
 # config.yaml
 
 dataset:
-  name: "wikimedia"
   lang_pair: ["en", "am"]
-  source: "hf"  # choices: "hf", "github", "opus"
+  selected_sources: ["hf", "github", "opus"]  # you can limit to ["hf"], etc.
+
   hf:
-    path: "opus/wikimedia"
-    split: "train"
-    src_lang: "en"
-    tgt_lang: "am"
+    - name: "smol"
+      path: "google/smol"
+      split: "train"
+      src_lang: "en"
+      tgt_lang: "am"
+    - name: "ms_terms"
+      path: "microsoft/ms_terms"
+      split: "train"
+      src_lang: "en"
+      tgt_lang: "am"
+
   github:
-    src_url: "https://raw.githubusercontent.com/username/repo/main/data.en"
-    tgt_url: "https://raw.githubusercontent.com/username/repo/main/data.am"
+    - name: "parallel-corpus"
+      src_url: "https://raw.githubusercontent.com/user/repo/main/data.enhttps://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/Legal/amh_eng/p_eng_ea.txt"
+      tgt_url: "https://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/Legal/amh_eng/p_amh_ea.txt"
+
   opus:
-    version: "v20230407"
-    base_url: "https://object.pouta.csc.fi/OPUS-wikimedia"
-    format: "moses"
-    filename_template: "moses/en-am.txt.zip"
+    - name: "wikimedia"
+      base_url: "https://object.pouta.csc.fi/OPUS-wikimedia"
+      format: "moses"
+      filename_template: "moses/en-am.txt.zip"
 
 download:
   output_dir: "data/"
@@ -39,7 +48,7 @@ filters:
 
 output:
   filtered_prefix: "filtered"
-  save_format: "txt"  # or csv, json
+  save_format: "hf"  # or txt, csv, json
 
 
 logging:

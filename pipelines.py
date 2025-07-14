@@ -17,7 +17,7 @@ import logging
 #from IPython.display import display
 
 
-def rule_filter(source_texts, target_texts, source_lang, target_lang, lower=False):
+def rule_filter(source_texts, target_texts, min_length=3, max_length=200, max_length_ratio=2.0, lower=False):
     
     df = pd.DataFrame({"Source": source_texts, "Target": target_texts})
     logging.info(f"Rule filter started: initial rows = {df.shape[0]}")
@@ -48,10 +48,10 @@ def rule_filter(source_texts, target_texts, source_lang, target_lang, lower=Fals
 
     # Drop too-long rows (source or target)
     # Based on your language, change the values "2" and "200"
-    df["Too-Long"] = ((df['Source'].str.count(' ')+1) > (df['Target'].str.count(' ')+1) * 2) |  \
-                     ((df['Target'].str.count(' ')+1) > (df['Source'].str.count(' ')+1) * 2) |  \
-                     ((df['Source'].str.count(' ')+1) > 200) |  \
-                     ((df['Target'].str.count(' ')+1) > 200)
+    df["Too-Long"] = ((df['Source'].str.count(' ')+1) > (df['Target'].str.count(' ')+1) * max_length_ratio) |  \
+                     ((df['Target'].str.count(' ')+1) > (df['Source'].str.count(' ')+1) * max_length_ratio) |  \
+                     ((df['Source'].str.count(' ')+1) > max_length) |  \
+                     ((df['Target'].str.count(' ')+1) > max_length)
                 
     #display(df.loc[df['Too-Long'] == True]) # display only too long rows
     df = df.set_index(['Too-Long'])
@@ -68,8 +68,8 @@ def rule_filter(source_texts, target_texts, source_lang, target_lang, lower=Fals
 
     # Drop too-short rows (source or target)
     # Based on your language, change the values "5"
-    df["Too-Short"] = ((df['Source'].str.len()) <= 3) |  \
-                      ((df['Target'].str.len()) <= 3)
+    df["Too-Short"] = ((df['Source'].str.len()) <= min_length) |  \
+                      ((df['Target'].str.len()) <= min_length)
                 
     df = df.set_index(['Too-Short'])
 
@@ -124,6 +124,7 @@ def semantic_filter(
     tgtlang,
     threshold=0.7,
     chunk_size=1000,
+    batch_size=2048,
 ):
     assert len(source_list) == len(target_list), "Source and target lists must be of the same length."
     
@@ -144,8 +145,8 @@ def semantic_filter(
         chunk_tgt = target_list[i:i + chunk_size]
 
         # Encode using Sentence Transformer
-        source_embeddings = model.encode_multi_process(chunk_src, pool=pool, batch_size=2048)
-        target_embeddings = model.encode_multi_process(chunk_tgt, pool=pool, batch_size=2048)
+        source_embeddings = model.encode_multi_process(chunk_src, pool=pool, batch_size=batch_size)
+        target_embeddings = model.encode_multi_process(chunk_tgt, pool=pool, batch_size=batch_size)
 
         for src_text, tgt_text, src_vec, tgt_vec in zip(chunk_src, chunk_tgt, source_embeddings, target_embeddings):
             similarity = pytorch_cos_sim(src_vec, tgt_vec).item()
