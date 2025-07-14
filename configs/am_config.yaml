@@ -40,3 +40,9 @@ filters:
 output:
   filtered_prefix: "filtered"
   save_format: "txt"  # or csv, json
+
+
+logging:
+  debug: true
+  log_dir: "logs/"
+  log_file: "pipeline.log"
