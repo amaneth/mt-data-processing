@@ -1,0 +1,42 @@
+# config.yaml
+
+dataset:
+  name: "wikimedia"
+  lang_pair: ["en", "am"]
+  source: "hf"  # choices: "hf", "github", "opus"
+  hf:
+    path: "opus/wikimedia"
+    split: "train"
+    src_lang: "en"
+    tgt_lang: "am"
+  github:
+    src_url: "https://raw.githubusercontent.com/username/repo/main/data.en"
+    tgt_url: "https://raw.githubusercontent.com/username/repo/main/data.am"
+  opus:
+    version: "v20230407"
+    base_url: "https://object.pouta.csc.fi/OPUS-wikimedia"
+    format: "moses"
+    filename_template: "moses/en-am.txt.zip"
+
+download:
+  output_dir: "data/"
+  unzip: true
+  force_download: false
+
+preprocessing:
+  lowercase: true
+  apply_rule_filter: true
+  apply_semantic_filter: true
+
+filters:
+  rule_filter:
+    min_length: 3
+    max_length: 200
+    max_length_ratio: 2.0
+  semantic_filter:
+    threshold: 0.85
+    chunk_size: 1000
+
+output:
+  filtered_prefix: "filtered"
+  save_format: "txt"  # or csv, json
