@@ -8,13 +8,15 @@ dataset:
     - name: "smol"
       path: "google/smol"
       split: "train"
-      src_lang: "en"
-      tgt_lang: "am"
-    - name: "ms_terms"
-      path: "microsoft/ms_terms"
+      config_name: "smolsent__en_am"
+      src_col: "src"
+      tgt_col: "trg"
+    - name: "AfriDocMT"
+      path: "masakhane/AfriDocMT"
+      config_name: "tech"
       split: "train"
-      src_lang: "en"
-      tgt_lang: "am"
+      src_col: "en"
+      tgt_col: "am"
 
   github:
     - name: "parallel-corpus"
@@ -23,10 +25,12 @@ dataset:
 
   opus:
     - name: "wikimedia"
+      url: "https://object.pouta.csc.fi/OPUS-wikimedia/v20230407/moses/am-en.txt.zip"
       # base_url: "https://object.pouta.csc.fi/OPUS-wikimedia"
       # format: "moses"
       # filename_template: "moses/en-am.txt.zip"
-    - name: "tatoeba"
+    - name: "TED2020"
+      url: "https://object.pouta.csc.fi/OPUS-TED2020/v1/moses/am-en.txt.zip"
 
 download:
   output_dir: "data/"
@@ -50,6 +54,7 @@ filters:
 output:
   filtered_prefix: "filtered"
   save_format: "hf"  # or txt, csv, json
+  save_dir: "preprocess_outputs"
 
 
 logging:
