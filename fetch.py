@@ -7,6 +7,8 @@ from tqdm.notebook import tqdm
 import logging
 
 
+logger = logging.getLogger("my_logger")
+
 
 def opus_info(srclang, tgtlang):
     opus_url = "https://opus.nlpl.eu/opusapi/?source="+srclang+"&target="+tgtlang+"&preprocessing=moses&version=latest"
@@ -14,12 +16,12 @@ def opus_info(srclang, tgtlang):
     response_json = response.json()
     corpora = response_json["corpora"]
     
-    logging.info(f"\nAvailable corpora for {srclang} → {tgtlang}:\n")
+    logger.info(f"\nAvailable corpora for {srclang} → {tgtlang}:\n")
     for entry in corpora:
-        logging.info(f"- Corpus: {entry['corpus']}")
-        logging.info(f"  Pairs: {entry.get('alignment_pairs', 'N/A')}")
-        logging.info(f"  Size: {entry.get('size', 'N/A')} KB")
-        logging.info(f"  URL : {entry['url']}\n")
+        logger.info(f"- Corpus: {entry['corpus']}")
+        logger.info(f"  Pairs: {entry.get('alignment_pairs', 'N/A')}")
+        logger.info(f"  Size: {entry.get('size', 'N/A')} KB")
+        logger.info(f"  URL : {entry['url']}\n")
 
     return corpora
 
@@ -27,7 +29,7 @@ def opus_info(srclang, tgtlang):
 
 
 def download_opus(srclang, tgtlang, url, base_dir="raw/"):
-    logging.info(f"Downloading opus data from {url}")
+    logger.info(f"Downloading opus data from {url}")
     filename = download(url)
     shutil.unpack_archive(filename, extract_dir=base_dir)
     os.remove(filename)
@@ -76,7 +78,7 @@ def download_url(src_url, tgt_url, src_name, tgt_name, base_dir="raw/"):
     with open(tgt_path, "w", encoding="utf-8") as f:
         f.write(tgt_text.text)
 
-    logging.info(f"Download from url is done.\n Source file saved to: {src_path}\n target file saved to: {tgt_path}")
+    logger.info(f"Download from url is done.\n Source file saved to: {src_path}\n target file saved to: {tgt_path}")
 
 
     return src_path, tgt_path

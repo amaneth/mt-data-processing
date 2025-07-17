@@ -13,6 +13,8 @@ import re
 import csv
 import logging
 
+logger = logging.getLogger("my_logger")
+
 # display(df) works only if you are in IPython/Jupyter Notebooks or enable:
 #from IPython.display import display
 
@@ -20,16 +22,16 @@ import logging
 def rule_filter(source_texts, target_texts, min_length=3, max_length=200, max_length_ratio=2.0, lower=False):
     
     df = pd.DataFrame({"Source": source_texts, "Target": target_texts})
-    logging.info(f"Rule filter started: initial rows = {df.shape[0]}")
+    logger.info(f"Rule filter started: initial rows = {df.shape[0]}")
  
     # Delete nan
     df = df.dropna()
-    logging.info(f"Step: Drop NaN\t\t--> Rows: {df.shape[0]}")
+    logger.info(f"Step: Drop NaN\t\t--> Rows: {df.shape[0]}")
 
 
     # Drop duplicates
     df = df.drop_duplicates()
-    logging.info(f"Step: Drop duplicates\t--> Rows: {df.shape[0]}")
+    logger.info(f"Step: Drop duplicates\t--> Rows: {df.shape[0]}")
 
     # Drop copy-source rows
     df["Source-Copied"] = df['Source'] == df['Target']
@@ -43,7 +45,7 @@ def rule_filter(source_texts, target_texts, min_length=3, max_length=200, max_le
     
     df = df.reset_index()
     df = df.drop(['Source-Copied'], axis = 1)
-    logging.info(f"Step: Drop identical rows\t--> Rows: {df.shape[0]}")
+    logger.info(f"Step: Drop identical rows\t--> Rows: {df.shape[0]}")
 
 
     # Drop too-long rows (source or target)
@@ -63,7 +65,7 @@ def rule_filter(source_texts, target_texts, min_length=3, max_length=200, max_le
 
     df = df.reset_index()
     df = df.drop(['Too-Long'], axis = 1)
-    logging.info(f"Step: Drop too-long\t--> Rows: {df.shape[0]}")
+    logger.info(f"Step: Drop too-long\t--> Rows: {df.shape[0]}")
 
 
     # Drop too-short rows (source or target)
@@ -80,7 +82,7 @@ def rule_filter(source_texts, target_texts, min_length=3, max_length=200, max_le
 
     df = df.reset_index()
     df = df.drop(['Too-Short'], axis = 1)
-    logging.info(f"Step: Drop too-short\t--> Rows: {df.shape[0]}")
+    logger.info(f"Step: Drop too-short\t--> Rows: {df.shape[0]}")
 
 
     # Remove HTML and normalize
@@ -89,30 +91,30 @@ def rule_filter(source_texts, target_texts, min_length=3, max_length=200, max_le
 
     df = df.replace(r'<.*?>|&lt;.*?&gt;|&?(amp|nbsp|quot);|{}', ' ', regex=True)
     df = df.replace(r'  ', ' ', regex=True)  # replace double-spaces with one space
-    logging.info(f"Step: Clean HTML\t--> Rows: {df.shape[0]}")
+    logger.info(f"Step: Clean HTML\t--> Rows: {df.shape[0]}")
 
 
     # Lower-case the data
     if lower == True:
         df['Source'] = df['Source'].str.lower()
         df['Target'] = df['Target'].str.lower()
-        logging.info("Step: Lowercased rows")
+        logger.info("Step: Lowercased rows")
     else:
-        logging.info("Step: Truecased rows retained")
+        logger.info("Step: Truecased rows retained")
 
 
     # Replace empty cells with NaN
     df = df.replace(r'^\s*$', np.nan, regex=True)
-    logging.info(f"Step: Drop new NaNs\t--> Rows: {df.shape[0]}")
+    logger.info(f"Step: Drop new NaNs\t--> Rows: {df.shape[0]}")
 
     # Delete nan (already there, or generated from the previous steps)
     df = df.dropna()
-    logging.info(f"Step: Shuffled rows\t--> Rows: {df.shape[0]}")
+    logger.info(f"Step: Shuffled rows\t--> Rows: {df.shape[0]}")
 
 
     # Shuffle the data
     df = df.sample(frac=1).reset_index(drop=True)
-    logging.info(f"Step: Shuffled rows\t--> Rows: {df.shape[0]}")
+    logger.info(f"Step: Shuffled rows\t--> Rows: {df.shape[0]}")
 
     return df["Source"].tolist(), df["Target"].tolist()
 
@@ -128,8 +130,8 @@ def semantic_filter(
 ):
     assert len(source_list) == len(target_list), "Source and target lists must be of the same length."
     
-    logging.info("Semantic filter started")
-    logging.info(f"Total sentence pairs: {len(source_list)} | Threshold: {threshold} | Chunk size: {chunk_size}")
+    logger.info("Semantic filter started")
+    logger.info(f"Total sentence pairs: {len(source_list)} | Threshold: {threshold} | Chunk size: {chunk_size}")
 
     model = load_model(srclang, tgtlang)
     pool = model.start_multi_process_pool()
@@ -139,7 +141,7 @@ def semantic_filter(
 
     for i in range(0, len(source_list), chunk_size):
         end_idx = min(i + chunk_size, len(source_list))
-        logging.info(f"Processing chunk: lines {i}–{end_idx}")
+        logger.info(f"Processing chunk: lines {i}–{end_idx}")
 
         chunk_src = source_list[i:i + chunk_size]
         chunk_tgt = target_list[i:i + chunk_size]
@@ -155,7 +157,7 @@ def semantic_filter(
                 filtered_target.append(tgt_text)
 
     model.stop_multi_process_pool(pool)
-    logging.info(f"Semantic filtering complete → Remaining: {len(filtered_source)} pairs")
+    logger.info(f"Semantic filtering complete → Remaining: {len(filtered_source)} pairs")
     return filtered_source, filtered_target
 
     
@@ -208,7 +210,7 @@ def load_model(srclang, tgtlang):
     
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = SentenceTransformer(model_name, device=device, cache_folder=model_cache)
-    logging.info(f"Loaded SentenceTransformer model: {model_name} on {device}")
+    logger.info(f"Loaded SentenceTransformer model: {model_name} on {device}")
     pool = model.start_multi_process_pool()
 
     return model
