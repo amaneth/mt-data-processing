@@ -7,6 +7,7 @@ from fetch import download_url, download_opus
 
 import logging
 from datetime import datetime
+import argparse
 
 def load_config(config_path):
     with open(config_path, "r") as f:
@@ -48,25 +49,29 @@ def main():
         log_file=log_cfg.get("log_file", "pipeline.log")
     ) 
     logging.info("🚀 Starting preprocessing pipeline")
-    logging.info(f"Dataset source: {source.upper()} | Language pair: {srclang}-{tgtlang}")
-    os.makedirs(raw_dir, exist_ok=True)
+    
 
     selected_sources = config["dataset"]["selected_sources"]
     lang_pair = config["dataset"]["lang_pair"]
     srclang, tgtlang = lang_pair
     raw_dir = config["download"]["output_dir"]
-
+    os.makedirs(raw_dir, exist_ok=True)
     for source in selected_sources:
+        logging.info(f"Dataset source: {source.upper()} | Language pair: {srclang}-{tgtlang}")
+
         datasets = config["dataset"].get(source, [])
-        
         for ds in datasets:
             name = ds["name"]
             logging.info(f"🚀 Processing {source.upper()} dataset: {name}")
 
             if source == "hf":
-                dataset = load_dataset(ds["path"], split=ds["split"])
-                source_list = [item[ds["src_lang"]] for item in dataset["translation"]]
-                target_list = [item[ds["tgt_lang"]] for item in dataset["translation"]]
+                if "config_name" in ds:
+                    dataset = load_dataset(ds["path"], name=ds["config_name"], split=ds["split"])
+                else:
+                    dataset = load_dataset(ds["path"], split=ds["split"])
+
+                source_list = [item[ds["src_col"]] for item in dataset]
+                target_list = [item[ds["tgt_col"]] for item in dataset]
 
             elif source == "github":
                 download_url(
@@ -92,7 +97,7 @@ def main():
 
             # Step 2: Rule filtering
             if config["preprocessing"].get("apply_rule_filter", True):
-                rule_cfg = config["preprocessing"]["rule_filter"]
+                rule_cfg = config["filters"]["rule_filter"]
                 logging.info("🧹 Applying rule-based filtering...")
 
                 source_list, target_list = rule_filter(
