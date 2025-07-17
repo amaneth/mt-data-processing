@@ -23,9 +23,10 @@ dataset:
 
   opus:
     - name: "wikimedia"
-      base_url: "https://object.pouta.csc.fi/OPUS-wikimedia"
-      format: "moses"
-      filename_template: "moses/en-am.txt.zip"
+      # base_url: "https://object.pouta.csc.fi/OPUS-wikimedia"
+      # format: "moses"
+      # filename_template: "moses/en-am.txt.zip"
+    - name: "tatoeba"
 
 download:
   output_dir: "data/"

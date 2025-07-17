@@ -82,10 +82,11 @@ def main():
                     target_list = f.read().splitlines()
 
             elif source == "opus":
-                download_opus(srclang, tgtlang, [name], base_dir=raw_dir)
-                with open(os.path.join(raw_dir, f"{name}.{srclang}"), "r") as f:
+                url = ds["url"]
+                source_file, target_file = download_opus(srclang, tgtlang, url, base_dir=raw_dir)
+                with open(os.path.join(raw_dir, source_file), "r") as f:
                     source_list = f.read().splitlines()
-                with open(os.path.join(raw_dir, f"{name}.{tgtlang}"), "r") as f:
+                with open(os.path.join(raw_dir, target_file), "r") as f:
                     target_list = f.read().splitlines()
 
 
