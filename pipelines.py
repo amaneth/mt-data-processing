@@ -21,6 +21,7 @@ logger = logging.getLogger("my_logger")
 
 def rule_filter(source_texts, target_texts, min_length=3, max_length=200, max_length_ratio=2.0, lower=False):
     
+    logger.debug(f"Source length:{len(source_texts)} Target Legnth:{len(target_texts)}")
     df = pd.DataFrame({"Source": source_texts, "Target": target_texts})
     logger.info(f"Rule filter started: initial rows = {df.shape[0]}")
  

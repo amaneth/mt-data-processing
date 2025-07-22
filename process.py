@@ -8,7 +8,7 @@ from fetch import download_url, download_opus
 import logging
 from datetime import datetime
 import argparse
-
+import sys
 
 def load_config(config_path):
     with open(config_path, "r") as f:
@@ -99,10 +99,15 @@ def main():
             elif source == "opus":
                 url = ds["url"]
                 source_file, target_file = download_opus(srclang, tgtlang, url, base_dir=raw_dir)
-                with open(os.path.join(raw_dir, source_file), "r") as f:
+                with open(os.path.join(raw_dir, srclang+"-"+tgtlang, source_file), "r") as f:
                     source_list = f.read().splitlines()
-                with open(os.path.join(raw_dir, target_file), "r") as f:
+                with open(os.path.join(raw_dir, srclang+"-"+tgtlang, target_file), "r") as f:
                     target_list = f.read().splitlines()
+
+                
+                if len(source_list) != len(target_list):
+                    logger.debug(f"Error: Length mismatch. Source:{len(source_list)} Target:{len(target_list)}")
+                    sys.exit(1)
 
 
             # Step 2: Rule filtering
@@ -150,10 +155,12 @@ def main():
 
                 final_dataset = Dataset.from_dict(dataset_dict)
 
-                output_dir = config["output"].get("save_dir", os.path.join(raw_dir, "filtered_dataset"))
-                final_dataset.save_to_disk(output_dir)
 
-                logger.info(f"✅ Hugging Face dataset saved to:\n  {output_dir}")
+                output_dir = config["output"].get("save_dir", os.path.join(raw_dir, "filtered_dataset"))
+                file_path = os.path.join(output_dir, srclang+"-"+tgtlang, output_prefix+"-"+name)
+                final_dataset.save_to_disk(file_path)
+
+                logger.info(f"✅ Hugging Face dataset saved to:\n  {file_path}")
             elif save_format=="txt":
                 out_src = os.path.join(raw_dir, f"{output_prefix}.{srclang}")
                 out_tgt = os.path.join(raw_dir, f"{output_prefix}.{tgtlang}")

@@ -20,7 +20,7 @@ dataset:
 
   github:
     - name: "parallel-corpus"
-      src_url: "https://raw.githubusercontent.com/user/repo/main/data.enhttps://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/Legal/amh_eng/p_eng_ea.txt"
+      src_url: "https://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/Legal/amh_eng/p_eng_ea.txt"
       tgt_url: "https://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/Legal/amh_eng/p_amh_ea.txt"
 
   opus:
@@ -33,7 +33,7 @@ dataset:
       url: "https://object.pouta.csc.fi/OPUS-TED2020/v1/moses/am-en.txt.zip"
 
 download:
-  output_dir: "data/"
+  output_dir: "raw/"
   unzip: true
   force_download: false
 
