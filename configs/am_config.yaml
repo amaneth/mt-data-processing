@@ -2,7 +2,7 @@
 
 dataset:
   lang_pair: ["en", "am"]
-  selected_sources: ["hf", "github", "opus"]  # you can limit to ["hf"], etc.
+  selected_sources: ["hf"]  # you can limit to ["hf"], etc.
 
   hf:
     - name: "smol"
@@ -48,7 +48,7 @@ filters:
     max_length: 200
     max_length_ratio: 2.0
   semantic_filter:
-    threshold: 0.85
+    threshold: 0.7
     chunk_size: 1000
 
 output:
@@ -60,4 +60,4 @@ output:
 logging:
   debug: true
   log_dir: "logs/"
-  log_file: "pipeline.log"
+  log_file: "en-am.log"

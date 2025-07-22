@@ -148,8 +148,8 @@ def semantic_filter(
         chunk_tgt = target_list[i:i + chunk_size]
 
         # Encode using Sentence Transformer
-        source_embeddings = model.encode_multi_process(chunk_src, pool=pool, batch_size=batch_size)
-        target_embeddings = model.encode_multi_process(chunk_tgt, pool=pool, batch_size=batch_size)
+        source_embeddings = model.encode(chunk_src, pool=pool, batch_size=batch_size)
+        target_embeddings = model.encode(chunk_tgt, pool=pool, batch_size=batch_size)
 
         for src_text, tgt_text, src_vec, tgt_vec in zip(chunk_src, chunk_tgt, source_embeddings, target_embeddings):
             similarity = pytorch_cos_sim(src_vec, tgt_vec).item()
@@ -212,7 +212,7 @@ def load_model(srclang, tgtlang):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = SentenceTransformer(model_name, device=device, cache_folder=model_cache)
     logger.info(f"Loaded SentenceTransformer model: {model_name} on {device}")
-    pool = model.start_multi_process_pool()
+    # pool = model.start_multi_process_pool()
 
     return model
 

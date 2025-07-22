@@ -1,5 +1,6 @@
 import os
 import yaml
+from tabulate import tabulate
 from datasets import load_dataset, Dataset
 
 from pipelines import rule_filter, semantic_filter
@@ -56,11 +57,15 @@ def main():
     config = load_config(config_path)
 
     # Setup logging
-    log_cfg = config.get("logging", {})
-    logger = setup_logging(debug=True, log_dir="logs", log_file="run.log")
+    log_cfg = config["logging"]
+    logger = setup_logging(
+        debug=log_cfg.get("debug", True), 
+        log_dir=log_cfg.get("log_dir", "logs/"),
+        log_file=log_cfg.get("log_file", "run.log"))
     logger.info("🚀 Starting preprocessing pipeline")
     
-
+    summary_log = []
+    
     selected_sources = config["dataset"]["selected_sources"]
     lang_pair = config["dataset"]["lang_pair"]
     srclang, tgtlang = lang_pair
@@ -109,7 +114,9 @@ def main():
                     logger.debug(f"Error: Length mismatch. Source:{len(source_list)} Target:{len(target_list)}")
                     sys.exit(1)
 
-
+            original_len = len(source_list)
+            after_rule_len = None
+            after_semantic_len = None
             # Step 2: Rule filtering
             if config["preprocessing"].get("apply_rule_filter", True):
                 rule_cfg = config["filters"]["rule_filter"]
@@ -123,6 +130,7 @@ def main():
                     max_length_ratio=rule_cfg.get("max_length_ratio", 2.0),
                     lower=rule_cfg.get("lowercase", False),
                 )
+                after_rule_len = len(source_list)
                 logger.info(f"✅ Rule filter output: {len(source_list)} sentence pairs")
 
 
@@ -140,7 +148,16 @@ def main():
                     chunk_size=sem_cfg.get("chunk_size", 1000),
                     batch_size=sem_cfg.get("batch_size", 2048)
                 )
+                after_semantic_len = len(source_list)
                 logger.info(f"✅ Semantic filter output: {len(source_list)} sentence pairs")
+
+            summary_log.append({
+                "source": source,
+                "name": name,
+                "original": original_len,
+                "after_rule": after_rule_len or original_len,
+                "after_semantic": after_semantic_len or after_rule_len or original_len,
+            })
 
             # Step 4: Save final outputs
             output_prefix = config["output"].get("filtered_prefix", "filtered")
@@ -173,6 +190,15 @@ def main():
             else:
                 logging.error(f"❌ Unknown output format: {save_format}")
                 raise ValueError(f"Unknown output format: {save_format}")
+    logger.info("\n📊 Final Dataset Summary:")
+    logger.info(
+        "\n" + tabulate(
+            [[entry["source"], entry["name"], entry["original"], entry["after_rule"], entry["after_semantic"]]
+            for entry in summary_log],
+            headers=["Source", "Dataset", "Original", "After Rule", "After Semantic"],
+            tablefmt="github"
+        )
+    )
 
 
 
