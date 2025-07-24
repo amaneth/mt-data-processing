@@ -28,7 +28,7 @@ def opus_info(srclang, tgtlang):
 
 
 
-def download_opus(srclang, tgtlang, url, base_dir="raw/"):
+def download_opus(srclang, tgtlang, name, url, base_dir="raw/"):
     logger.info(f"Downloading opus data from {url}")
     filename = download(url)
     shutil.unpack_archive(filename, extract_dir=base_dir)
@@ -49,10 +49,10 @@ def download_opus(srclang, tgtlang, url, base_dir="raw/"):
 
         if filename.endswith(unwanted_exts):
             os.remove(path)
-        elif filename.endswith(srclang):
+        elif name in filename and filename.endswith(srclang):
             source_file = filename
             shutil.move(path, os.path.join(directory, filename))  
-        elif filename.endswith(tgtlang):
+        elif name in filename and filename.endswith(tgtlang):
             target_file = filename
             shutil.move(path, os.path.join(directory, filename)) 
 
