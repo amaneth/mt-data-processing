@@ -1,17 +1,18 @@
 import fasttext
 import argparse
+from comet import download_model, load_from_checkpoint
 
 import logging
 
 logger = logging.getLogger("my_logger")
 
+logging.getLogger("comet").propagate = False
 
 def load_file(path):
     with open(path, "r", encoding="utf-8") as f:
         return f.read().splitlines()
 
 def get_comet_model(model_name="masakhane/africomet-qe-stl"):
-    from comet import download_model, load_from_checkpoint
     model_path = download_model(model_name)  # downloads once and caches
     return load_from_checkpoint(model_path)
 

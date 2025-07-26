@@ -31,6 +31,9 @@ def setup_logging(debug, log_dir, log_file):
     # Prevent duplicate logs if this function is called multiple times
     if logger.hasHandlers():
         logger.handlers.clear()
+        
+    for handler in logging.root.handlers[:]:
+        logging.root.removeHandler(handler)
 
     # Formatter for both console and file
     # formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
