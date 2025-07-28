@@ -2,7 +2,7 @@
 
 dataset:
   lang_pair: ["en", "am"]
-  selected_sources: ["hf"]  # you can limit to ["hf"], etc.
+  selected_sources: ["github"] 
 
   hf:
     - name: "smol"
@@ -11,12 +11,6 @@ dataset:
       config_name: "smolsent__en_am"
       src_col: "src"
       tgt_col: "trg"
-    - name: "AfriDocMT"
-      path: "masakhane/AfriDocMT"
-      config_name: "tech"
-      split: "train"
-      src_col: "en"
-      tgt_col: "am"
 
   github:
     - name: "parallel-corpus"
@@ -34,8 +28,8 @@ dataset:
 
 download:
   output_dir: "raw/"
-  unzip: true
-  force_download: false
+  dataset_cache: "dataset_cache"
+  model_cache: "model_cache"
 
 preprocessing:
   lowercase: true
@@ -50,6 +44,10 @@ filters:
   semantic_filter:
     threshold: 0.7
     chunk_size: 1000
+
+validation:
+  quality_estimation: true
+  language_detection: true
 
 output:
   filtered_prefix: "filtered"

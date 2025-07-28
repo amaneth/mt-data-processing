@@ -13,6 +13,7 @@ import argparse
 import sys
 from itertools import chain
 from tqdm import tqdm
+import argparse
 
 def load_config(config_path):
     with open(config_path, "r") as f:
@@ -58,10 +59,10 @@ def setup_logging(debug, log_dir, log_file):
     return logger
 
 
-def main():
-    dataset_cache = "dataset_cache"
-    config_path = "configs/am_config.yaml"
+def main(config_path):
+    # config_path = "configs/am_config.yaml"
     config = load_config(config_path)
+    dataset_cache = config["download"].get("dataset_cache", "dataset_cache/")
 
     # Setup logging
     log_cfg = config["logging"]
@@ -219,11 +220,28 @@ def main():
         else:
             logging.error(f"❌ Unknown output format: {save_format}")
             raise ValueError(f"Unknown output format: {save_format}")
+
+        # Compute total counts
+    total_original = sum(entry["original"] for entry in summary_log)
+    total_after_rule = sum(entry["after_rule"] for entry in summary_log)
+    total_after_semantic = sum(entry["after_semantic"] for entry in summary_log)
+
+        # Add a summary row
+    summary_table = [
+        [entry["source"], entry["name"], entry["original"], entry["after_rule"], entry["after_semantic"], entry["language_detected"], entry["translation_quality"]]
+        for entry in summary_log
+    ]
+
+    # Append total row
+    summary_table.append([
+        "TOTAL", "-", total_original, total_after_rule, total_after_semantic, "-", "-"
+    ])
+
+
     logger.info("\n📊 Final Dataset Summary:")
     logger.info(
         "\n" + tabulate(
-            [[entry["source"], entry["name"], entry["original"], entry["after_rule"], entry["after_semantic"], entry["language_detected"], entry["translation_quality"]]
-            for entry in summary_log],
+            summary_table,
             headers=["Source", "Dataset", "Original", "After Rule", "After Semantic", "Language Detected", "Translation Quality"],
             tablefmt="github"
         )
@@ -233,4 +251,14 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Run preprocessing pipeline")
+    parser.add_argument(
+        "--config",
+        type=str,
+        required=True,
+        help="Path to the config YAML file(required)"
+    )
+
+    args = parser.parse_args()
+
+    main(args.config)
