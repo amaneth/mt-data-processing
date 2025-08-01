@@ -1,20 +1,19 @@
 import fasttext
 import argparse
-from comet import download_model, load_from_checkpoint
+
 
 import logging
 
 logger = logging.getLogger("my_logger")
 
-logging.getLogger("comet").propagate = False
 
 def load_file(path):
     with open(path, "r", encoding="utf-8") as f:
         return f.read().splitlines()
 
-def get_comet_model(model_name="masakhane/africomet-qe-stl"):
-    model_path = download_model(model_name)  # downloads once and caches
-    return load_from_checkpoint(model_path)
+# def get_comet_model(model_name="masakhane/africomet-qe-stl"):
+#     model_path = download_model(model_name)  # downloads once and caches
+#     return load_from_checkpoint(model_path)
 
 
 # def language_detection(target_list):
@@ -80,14 +79,12 @@ def language_detection(texts, expected_lang=None, threshold=0.6):
 
 
 
-def quality_estimation(source_list, target_list):
-    model_name="masakhane/africomet-qe-stl"
-    model = get_comet_model(model_name)
+def quality_estimation(source_list, target_list, comet_model=None):
     
     data = [{"src": src.strip(), "mt": tgt.strip()} for src, tgt in zip(source_list, target_list)]
 
     # Predict
-    model_output = model.predict(data, batch_size=8, gpus=1)
+    model_output = comet_model.predict(data, batch_size=8, gpus=1)
     system_score = round(model_output.system_score, 4)
 
     logger.info(f"🧪 Quality Estimation → Score:{system_score}")

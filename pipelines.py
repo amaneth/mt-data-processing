@@ -128,17 +128,20 @@ def semantic_filter(
     threshold=0.7,
     chunk_size=1000,
     batch_size=2048,
-):
+    model=None,
+    pool=None
+    ):
     assert len(source_list) == len(target_list), "Source and target lists must be of the same length."
     
     logger.info("Semantic filter started")
     logger.info(f"Total sentence pairs: {len(source_list)} | Threshold: {threshold} | Chunk size: {chunk_size}")
 
-    model = load_model(srclang, tgtlang)
-    pool = model.start_multi_process_pool()
+    # model = load_model(srclang, tgtlang)
+    # pool = model.start_multi_process_pool()
 
     filtered_source = []
     filtered_target = []
+
 
     for i in range(0, len(source_list), chunk_size):
         end_idx = min(i + chunk_size, len(source_list))
@@ -157,7 +160,7 @@ def semantic_filter(
                 filtered_source.append(src_text)
                 filtered_target.append(tgt_text)
 
-    model.stop_multi_process_pool(pool)
+
     logger.info(f"Semantic filtering complete → Remaining: {len(filtered_source)} pairs")
     return filtered_source, filtered_target
 
