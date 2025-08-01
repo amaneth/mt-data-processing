@@ -34,13 +34,14 @@ def download_opus(srclang, tgtlang, name, url, base_dir="raw/"):
     shutil.unpack_archive(filename, extract_dir=base_dir)
     os.remove(filename)
 
-    directory = os.path.join(base_dir, srclang+"-"+tgtlang)
+    directory = os.path.join(base_dir, srclang + "-" + tgtlang)
     os.makedirs(directory, exist_ok=True)
 
     unwanted_exts = (".ids", ".scores", ".xml", "LICENSE", "README")
 
+    source_file = None
+    target_file = None
 
-    
     for filename in os.listdir(base_dir):
         path = os.path.join(base_dir, filename)
 
@@ -56,7 +57,8 @@ def download_opus(srclang, tgtlang, name, url, base_dir="raw/"):
             target_file = filename
             shutil.move(path, os.path.join(directory, filename)) 
 
-    
+    if source_file is None or target_file is None:
+        raise FileNotFoundError(f"Could not find expected source/target files for '{name}' with languages '{srclang}' and '{tgtlang}' in '{base_dir}'.")
 
     return source_file, target_file
 
