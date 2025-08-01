@@ -1,10 +1,11 @@
 import os
 import yaml
 from tabulate import tabulate
-from datasets import load_dataset, Dataset
+from datasets import Dataset
+from dataset_loader import load_dataset_standard
+from model_loader import load_sentence_transformer, get_comet_model
 
 from pipelines import rule_filter, semantic_filter
-from fetch import download_url, download_opus
 from validators import language_detection, quality_estimation
 
 import logging
@@ -81,50 +82,29 @@ def main(config_path):
     os.makedirs(raw_dir, exist_ok=True)
 
     all_datasets = list(chain.from_iterable(
-        [(source, ds) for ds in config["dataset"].get(source, [])]
+        [dict(ds, source=source) for ds in config["dataset"].get(source, [])]
         for source in selected_sources
     ))
+
+    # load sentence_transformers and comet models
+    sentence_transformer_model = load_sentence_transformer(srclang, tgtlang)
+    model_pool=sentence_transformer_model.start_multi_process_pool()
+    comet_model = get_comet_model(model_name="masakhane/africomet-qe-stl")
+
     BLUE = "\033[1;34m"
     RESET = "\033[0m"
-    for dataset_counter, (source, ds) in enumerate(tqdm(all_datasets, desc=f"{BLUE}Processing datasets"), 1):
-        name = ds["name"]
+    for ds_cfg in tqdm(all_datasets, desc=f"{BLUE}Processing datasets"):
+        name = ds_cfg["name"]
+        source = ds_cfg["source"]
+        srclang, tgtlang = config["dataset"].get("lang_pair")
 
         logger.info(f"{BLUE}\n" + "=" * 80)
         logger.info(f"📦 STARTING DATASET: {source.upper()} - {name}")
         logger.info(f"🔤 Language Pair: {srclang}-{tgtlang}")
         logger.info(f"{"=" * 80}{RESET}")
 
-        if source == "hf":
-            if "config_name" in ds:
-                dataset = load_dataset(ds["path"], name=ds["config_name"], split=ds["split"], cache_dir=dataset_cache)
-            else:
-                dataset = load_dataset(ds["path"], split=ds["split"], cache_dir=dataset_cache)
-
-            source_list = [item[ds["src_col"]] for item in dataset]
-            target_list = [item[ds["tgt_col"]] for item in dataset]
-
-        elif source == "github":
-            download_url(
-                ds["src_url"],
-                ds["tgt_url"],
-                src_name=f"{name}.{srclang}",
-                tgt_name=f"{name}.{tgtlang}",
-                base_dir=raw_dir,
-            )
-            with open(os.path.join(raw_dir, f"{name}.{srclang}"), "r") as f:
-                source_list = f.read().splitlines()
-            with open(os.path.join(raw_dir, f"{name}.{tgtlang}"), "r") as f:
-                target_list = f.read().splitlines()
-
-        elif source == "opus":
-            url = ds["url"]
-            name = ds["name"]
-            source_file, target_file = download_opus(srclang, tgtlang, name, url, base_dir=raw_dir)
-            with open(os.path.join(raw_dir, srclang+"-"+tgtlang, source_file), "r") as f:
-                source_list = f.read().splitlines()
-            with open(os.path.join(raw_dir, srclang+"-"+tgtlang, target_file), "r") as f:
-                target_list = f.read().splitlines()
-
+        source_list, target_list = load_dataset_standard(ds_cfg, srclang, tgtlang, raw_dir=raw_dir, dataset_cache=dataset_cache)
+        
             
         if len(source_list) != len(target_list):
             logger.debug(f"❌ Length mismatch. Source:{len(source_list)} Target:{len(target_list)}")
@@ -149,12 +129,12 @@ def main(config_path):
             after_rule_len = len(source_list)
             logger.info(f"✅ Rule filter output: {len(source_list)} sentence pairs")
 
-
         # Step 3: Semantic filtering
         if config["preprocessing"].get("apply_semantic_filter", False):
             sem_cfg = config["filters"]["semantic_filter"]
             logger.info("🧠 Applying semantic filtering...")
             logger.debug(f"Semantic filter config: {sem_cfg}")
+       
             source_list, target_list = semantic_filter(
                 source_list,
                 target_list,
@@ -162,8 +142,12 @@ def main(config_path):
                 tgtlang=tgtlang,
                 threshold=sem_cfg.get("threshold", 0.7),
                 chunk_size=sem_cfg.get("chunk_size", 1000),
-                batch_size=sem_cfg.get("batch_size", 2048)
+                batch_size=sem_cfg.get("batch_size", 2048),
+                model=sentence_transformer_model,
+                pool=model_pool
             )
+         
+            
             after_semantic_len = len(source_list)
             logger.info(f"✅ Semantic filter output: {len(source_list)} sentence pairs")
 
@@ -172,7 +156,7 @@ def main(config_path):
         if config["validation"].get("language_detection", True): 
             lang_detected, lang_score = language_detection(target_list)
         if config["validation"].get("quality_estimation", True):
-            quality_score = quality_estimation(source_list, target_list)
+            quality_score = quality_estimation(source_list, target_list, comet_model=comet_model)
         
         logger.info(f"✅ Validation done. Language:{lang_detected} Language Score: {lang_score} QE socre: {quality_score}")
 
@@ -222,6 +206,7 @@ def main(config_path):
             raise ValueError(f"Unknown output format: {save_format}")
 
         # Compute total counts
+    sentence_transformer_model.stop_multi_process_pool(model_pool)
     total_original = sum(entry["original"] for entry in summary_log)
     total_after_rule = sum(entry["after_rule"] for entry in summary_log)
     total_after_semantic = sum(entry["after_semantic"] for entry in summary_log)
