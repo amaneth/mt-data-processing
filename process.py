@@ -10,11 +10,11 @@ from validators import language_detection, quality_estimation
 
 import logging
 from datetime import datetime
-import argparse
 import sys
 from itertools import chain
 from tqdm import tqdm
 import argparse
+import json
 
 def load_config(config_path):
     with open(config_path, "r") as f:
@@ -23,6 +23,13 @@ def load_config(config_path):
 def save_to_file(lines, file_path):
     with open(file_path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
+
+def load_custom_metadata(output_dir):
+    meta_path = os.path.join(output_dir, "metadata.json")
+    if os.path.exists(meta_path):
+        with open(meta_path, encoding="utf-8") as f:
+            return json.load(f)
+    return None
 
 def setup_logging(debug, log_dir, log_file):
     os.makedirs(log_dir, exist_ok=True)
@@ -58,6 +65,7 @@ def setup_logging(debug, log_dir, log_file):
     logger.info(f"Logging initialized. Log file: {full_log_path}")
 
     return logger
+
 
 
 def main(config_path):
@@ -97,6 +105,25 @@ def main(config_path):
         name = ds_cfg["name"]
         source = ds_cfg["source"]
         srclang, tgtlang = config["dataset"].get("lang_pair")
+        output_prefix = config["output"].get("filtered_prefix", "filtered")
+        output_dir = config["output"].get("save_dir", os.path.join(raw_dir, "filtered_dataset"))
+
+        dataset_name = output_prefix+"-"+name
+        lang_pair = f"{srclang}-{tgtlang}"
+        file_path = os.path.join(output_dir, lang_pair, dataset_name)
+
+
+
+        if os.path.exists(file_path):
+            meta = load_custom_metadata(file_path)
+            if meta:
+                logger.info(f"✅ Cached: {meta['dataset_name']} — "
+                    f"{meta['after_semantic']} pairs | QE: {meta['quality_score']}")
+                continue
+            else:
+                logger.info(f"⚠ Found dataset at {output_dir} but no custom metadata — processing anyway")
+        else:
+            print(f"❌ Dataset not found at {file_path} — processing from scratch")
 
         logger.info(f"{BLUE}\n" + "=" * 80)
         logger.info(f"📦 STARTING DATASET: {source.upper()} - {name}")
@@ -174,7 +201,6 @@ def main(config_path):
 
     
         # Step 5: Save final outputs
-        output_prefix = config["output"].get("filtered_prefix", "filtered")
         save_format = config["output"].get("save_format", "txt")
 
         logger.info("💾 Saving final dataset...")
@@ -185,13 +211,26 @@ def main(config_path):
             }
 
             final_dataset = Dataset.from_dict(dataset_dict)
-
-
-            output_dir = config["output"].get("save_dir", os.path.join(raw_dir, "filtered_dataset"))
-            file_path = os.path.join(output_dir, srclang+"-"+tgtlang, output_prefix+"-"+name)
             final_dataset.save_to_disk(file_path)
 
             logger.info(f"✅ Hugging Face dataset saved to:\n  {file_path}")
+
+            custom_metadata = {
+                "dataset_name": dataset_name,
+                "lang_pair": lang_pair,
+                "original_rows": original_len,
+                "after_rule": after_rule_len or original_len,
+                "after_semantic": after_semantic_len or after_rule_len or original_len,
+                "target_language": lang_detected,
+                "lang_score": lang_score,
+                "quality_score": quality_score,
+                "processed_at": datetime.utcnow().isoformat()
+            }
+
+            meta_path = os.path.join(file_path, "metadata.json")
+            with open(meta_path, "w", encoding="utf-8") as f:
+                json.dump(custom_metadata, f, ensure_ascii=False, indent=2)
+
         elif save_format=="txt":
             out_src = os.path.join(raw_dir, f"{output_prefix}.{srclang}")
             out_tgt = os.path.join(raw_dir, f"{output_prefix}.{tgtlang}")
@@ -204,6 +243,9 @@ def main(config_path):
         else:
             logging.error(f"❌ Unknown output format: {save_format}")
             raise ValueError(f"Unknown output format: {save_format}")
+        
+
+
 
         # Compute total counts
     sentence_transformer_model.stop_multi_process_pool(model_pool)
