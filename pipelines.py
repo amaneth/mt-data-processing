@@ -15,8 +15,6 @@ import logging
 
 logger = logging.getLogger("my_logger")
 
-# display(df) works only if you are in IPython/Jupyter Notebooks or enable:
-#from IPython.display import display
 
 
 def rule_filter(source_texts, target_texts, min_length=3, max_length=200, max_length_ratio=2.0, lower=False):
@@ -166,58 +164,6 @@ def semantic_filter(
 
     
 
-
-# def line_count(filename):
-#     f = open(filename, 'rb')
-#     lines = 0
-#     buf_size = 1024 * 1024
-#     read_f = f.raw.read
-
-#     buf = read_f(buf_size)
-#     while buf:
-#         lines += buf.count(b'\n')
-#         buf = read_f(buf_size)
-
-#     return lines
-
-def load_model(srclang, tgtlang):
-    # Download and load the model
-    model_cache = "model_cache"
-    
-    muse_langs = ['ar', 'de', 'en', 'es', 'fr', 'it', 'ko', 'nl', 'pt', 'pt', 'ru', 'tr', 'zh']
-    para_langs = ["ar", "bg", "ca", "cs", "da", "de", "en", "el", "es", "et", "fa", "fi", "fr", "gl", "gu", "he", "hi", "hr", "hu", "hy", "id", "it", "ja", "ka", "ko", "ku", "lt", "lv", "mk", "mn", "mr", "ms", "my", "nb", "nl", "pl", "pt", "pt", "ro", "ru", "sk", "sl", "sq", "sr", "sv", "th", "tr", "uk", "ur", "vi", "zh"]
-    microsoft_langs = ["en", "ar", "bg", "de", "el", "es", "fr", "hi", "ru", "sw", "th", "tr", "ur", "vi", "zh"]
-    labse_codes = [
-    "af", "sq", "am", "ar", "hy", "as", "az", "eu", "be", "bn", "bs", "bg", "my", "ca", "ceb",
-    "zh", "co", "hr", "cs", "da", "nl", "en", "eo", "et", "fi", "fr", "fy", "gl", "ka", "de",
-    "el", "gu", "ht", "ha", "haw", "he", "hi", "hmn", "hu", "is", "ig", "id", "ga", "it", "ja",
-    "jv", "kn", "kk", "km", "rw", "ko", "ku", "ky", "lo", "la", "lv", "lt", "lb", "mk", "mg",
-    "ms", "ml", "mt", "mi", "mr", "mn", "ne", "no", "ny", "or", "fa", "pl", "pt", "pa", "ro",
-    "ru", "sm", "gd", "sr", "st", "sn", "si", "sk", "sl", "so", "es", "su", "sw", "sv", "tl",
-    "tg", "ta", "tt", "te", "th", "bo", "tr", "tk", "ug", "uk", "ur", "uz", "vi", "cy", "wo",
-    "xh", "yi", "yo", "zu"
-]
-
-    
-    if len(srclang) > 2 or len(tgtlang) > 2:
-        raise SystemExit("Please use an ISO 639‑1 language code, e.g. 'en'!")
-    elif srclang in muse_langs and tgtlang in muse_langs:
-        model_name = "distiluse-base-multilingual-cased-v1"  # 15 languages
-    elif srclang in para_langs and tgtlang in para_langs:
-        model_name = "paraphrase-multilingual-MiniLM-L12-v2"  # 50 languages
-    elif srclang in microsoft_langs and tgtlang in microsoft_langs:
-        model_name = "microsoft/Multilingual-MiniLM-L12-H384"  # 16 language
-    elif srclang in labse_codes and tgtlang in labse_codes:
-        model_name = "sentence-transformers/LaBSE"
-    else:
-        raise SystemExit("Language pair is not supported!")
-    
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = SentenceTransformer(model_name, device=device, cache_folder=model_cache)
-    logger.info(f"Loaded SentenceTransformer model: {model_name} on {device}")
-    # pool = model.start_multi_process_pool()
-
-    return model
 
 
 if __name__=="__main__":

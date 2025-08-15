@@ -11,26 +11,6 @@ def load_file(path):
     with open(path, "r", encoding="utf-8") as f:
         return f.read().splitlines()
 
-# def get_comet_model(model_name="masakhane/africomet-qe-stl"):
-#     model_path = download_model(model_name)  # downloads once and caches
-#     return load_from_checkpoint(model_path)
-
-
-# def language_detection(target_list):
-
-#     model = fasttext.load_model("lid.176.bin")
-
-#     content = " ".join(target_list)
-
-#     label, confidence = model.predict(content)
-
-#     predicted_langauge = label[0].replace('__label__', '')
-#     confidence = confidence[0]
-
-#     logger.info(f"🧠 Language Detection → Language: {predicted_langauge.upper()} | Confidence: {confidence[0]:.4f}")
-
-#     return predicted_langauge, confidence
-
 
 def language_detection(texts, expected_lang=None, threshold=0.6):
     model = fasttext.load_model("lid.176.bin")
