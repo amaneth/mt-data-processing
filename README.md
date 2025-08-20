@@ -13,10 +13,11 @@ A unified pipeline to download, preprocess, assess the quality, merge, and push 
 - **Preprocessing**:
   - Rule-based filtering
   - Semantic filtering
+  - Language detect filtering
 - **Quality Assessment**:
-  - Language identification
   - Model-based quality estimation
 - **Merge and Push**:
+  - Choose dataset with good quality
   - Combine all processed datasets into one
   - Push to Hugging Face Hub
 
@@ -26,9 +27,8 @@ A unified pipeline to download, preprocess, assess the quality, merge, and push 
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/your-repo.git
-   cd your-repo
-
+   git clone https://github.com/amaneth/mt-data-processing.git
+   cd mt-data-processing
 2. **Install dependencies**
    ```bash
    pip install -r requirements.txt
@@ -37,16 +37,11 @@ A unified pipeline to download, preprocess, assess the quality, merge, and push 
 4. **Preprocess the dataset**
     ```bash
     python process.py --config am_config.yaml
-5. **Quality estimation**
-    ```bash
-    python quality_estimation.py --dataset data --task qe
-    # or
-    python quality_estimation.py --dataset data --task lang
 
-6. **Merge the datasets**
+5. **Merge the datasets**
     ```bash
     python merge.py --datasets dataset1 dataset2 ...
-7. **Push to Hugging Face Hub**
+6. **Push to Hugging Face Hub**
     ```bash
     python push_to_hub.py --dataset data
 
@@ -79,6 +74,7 @@ The `config.yaml` file controls the entire pipeline. Here’s an overview of its
 
 ### `preprocessing`
 - `pipelines`: List of preprocessing steps, e.g., `rule_filter`, `semantic_filter`
+- `from_cache`: If true, it checks if the dataset is already preporcessed in the `save_dir` and skips preprocessing"
 
 ### `filters`
 - **Rule filter**:
@@ -87,6 +83,9 @@ The `config.yaml` file controls the entire pipeline. Here’s an overview of its
 - **Semantic filter**:
   - `threshold`: Similarity threshold
   - `chunk_size`: Batch size for filtering
+- **Language detect filter**:
+  - `batch_size`: Batch size for fasttext processing
+  - `min_score`: threshold value for filtering
 
 ---
 
