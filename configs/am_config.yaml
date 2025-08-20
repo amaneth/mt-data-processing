@@ -2,7 +2,7 @@
 
 dataset:
   lang_pair: ["en", "am"]
-  selected_sources: ["hf", "opus", "url"] 
+  selected_sources: ["table"] 
 
   hf:
     - name: "smol"
@@ -40,14 +40,6 @@ dataset:
       src_col: "translation-en-itani"
       tgt_col: "translation-am-sadiq"
       format: "flat_column"
-    - name: "mafand"
-      path: "masakhane/mafand"
-      split: "validation+test"
-      config_name: "en-amh"
-      src_key: "en"
-      tgt_key: "amh"
-      column: "translation"
-      "format": "nested_translation"
     - name: "ntrex"
       path: "davidstap/NTREX"
       split: "test"
@@ -127,6 +119,8 @@ dataset:
       src_col: "en"
       tgt_col: "am"
       format: "flat_column"
+
+
   opus:
     - name: "wikimedia"
       url: "https://object.pouta.csc.fi/OPUS-wikimedia/v20230407/moses/am-en.txt.zip"
@@ -174,6 +168,18 @@ dataset:
     - name: "horn-mt"
       src_url: "https://raw.githubusercontent.com/asmelashteka/HornMT/refs/heads/main/data/eng.txt"
       tgt_url: "https://raw.githubusercontent.com/asmelashteka/HornMT/refs/heads/main/data/amh.txt" 
+
+  table:
+    - name: "mt-evaluation-amharic-amen"
+      url: "https://zenodo.org/records/3734260/files/amen.tsv?download=1"
+      src_col: "Reference Translation"
+      tgt_col: "Source Sentence"
+      file_type: "tsv"
+    - name: "mt-evaluation-amharic-enam"
+      url: "https://zenodo.org/records/3734260/files/enam.tsv?download=1"
+      src_col: "Source"
+      tgt_col: "Reference Translation"
+      file_type: "tsv"
 
 
 

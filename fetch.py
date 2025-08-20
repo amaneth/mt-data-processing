@@ -5,6 +5,7 @@ import shutil
 import os
 from tqdm.notebook import tqdm
 import logging
+import csv
 
 
 logger = logging.getLogger("my_logger")
@@ -84,6 +85,30 @@ def download_url(src_url, tgt_url, src_name, tgt_name, base_dir="raw/"):
 
 
     return src_path, tgt_path
+
+
+
+
+def download_table(url, save_name, file_type="tsv", base_dir="raw/"):
+  
+    if file_type not in {"csv", "tsv"}:
+        raise ValueError("file_type must be either 'csv' or 'tsv'")
+
+    # Ensure base_dir exists
+    os.makedirs(base_dir, exist_ok=True)
+
+    response = requests.get(url)
+    response.raise_for_status()  # throw error if download failed
+
+    filename = f"{save_name}.{file_type}"
+    save_path = os.path.join(base_dir, filename)
+
+    with open(save_path, "w", encoding="utf-8") as f:
+        f.write(response.text)
+
+    logger.info(f"Downloaded table from URL.\n Saved to: {save_path}")
+
+    return save_path
 
 
     

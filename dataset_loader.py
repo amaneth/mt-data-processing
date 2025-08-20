@@ -1,6 +1,6 @@
 import os
 from datasets import load_dataset
-from fetch import download_url, download_opus
+from fetch import download_url, download_opus, download_table
 
 def load_flat_column_dataset(cfg, dataset_cache=None):
     
@@ -50,16 +50,16 @@ def load_hf_dataset(cfg, dataset_cache=None):
 def load_url_dataset(cfg, srclang, tgtlang, raw_dir=None):
     name = cfg["name"]
     print(raw_dir)
-    download_url(
+    src_path, tgt_path = download_url(
         cfg["src_url"],
         cfg["tgt_url"],
         src_name=f"{name}.{srclang}",
         tgt_name=f"{name}.{tgtlang}",
         base_dir=raw_dir,
     )
-    with open(os.path.join(raw_dir, f"{cfg["name"]}.{srclang}"), "r") as f:
+    with open(src_path, "r") as f:
         source_list = f.read().splitlines()
-    with open(os.path.join(raw_dir, f"{name}.{tgtlang}"), "r") as f:
+    with open(tgt_path, "r") as f:
         target_list = f.read().splitlines()
     
     return source_list, target_list
@@ -74,6 +74,35 @@ def load_opus_dataset(cfg, srclang, tgtlang, raw_dir=None, dataset_cache=None):
     
     return source_list, target_list
 
+def load_table_dataset(cfg, raw_dir=None):
+    import pandas as pd
+
+    # Download the file
+    file_path = download_table(
+        url=cfg["url"],
+        save_name=cfg["name"],
+        file_type=cfg.get("file_type", "tsv"),
+        base_dir=raw_dir,
+    )
+
+    # Load with pandas
+    if cfg.get("file_type", "tsv") == "tsv":
+        df = pd.read_csv(
+                    file_path,
+                    sep="\t",
+                    quoting=3,  # csv.QUOTE_NONE
+                    on_bad_lines='skip',
+                    engine="python"
+                )
+    else:
+        df = pd.read_csv(file_path)
+
+    # Extract source + target as lists
+    source_list = df[cfg["src_col"]].astype(str).tolist()
+    target_list = df[cfg["tgt_col"]].astype(str).tolist()
+
+    return source_list, target_list
+
 def load_dataset_standard(cfg, srclang, tgtlang, raw_dir=None, dataset_cache=None):
     source = cfg.get("source", "hf")
     if source == "hf":
@@ -82,5 +111,7 @@ def load_dataset_standard(cfg, srclang, tgtlang, raw_dir=None, dataset_cache=Non
         return load_opus_dataset(cfg, srclang, tgtlang, raw_dir)
     elif source == "url":
         return load_url_dataset(cfg, srclang, tgtlang, raw_dir)
+    elif source == "table":
+        return load_table_dataset(cfg, raw_dir)
     else:
         raise NotImplementedError(f"Unknown source: {source}")
