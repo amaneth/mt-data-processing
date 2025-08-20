@@ -3,10 +3,10 @@ import yaml
 from tabulate import tabulate
 from datasets import Dataset
 from dataset_loader import load_dataset_standard
-from model_loader import load_sentence_transformer, get_comet_model
+from model_loader import load_sentence_transformer, get_comet_model, get_fasttext_model
 
-from pipelines import rule_filter, semantic_filter
-from validators import language_detection, quality_estimation
+from pipelines import rule_filter, semantic_filter, lang_detect_filter
+from validators import quality_estimation
 
 import logging
 from datetime import datetime
@@ -15,6 +15,7 @@ from itertools import chain
 from tqdm import tqdm
 import argparse
 import json
+
 
 def load_config(config_path):
     with open(config_path, "r") as f:
@@ -80,7 +81,8 @@ def load_models(config):
     sentence_model = load_sentence_transformer(srclang, tgtlang)
     model_pool = sentence_model.start_multi_process_pool()
     comet_model = get_comet_model(model_name="masakhane/africomet-qe-stl")
-    return sentence_model, model_pool, comet_model
+    fasttext_model = get_fasttext_model(model_name="lid.176.bin")
+    return sentence_model, model_pool, comet_model, fasttext_model
 
 def collect_datasets(config):
     selected_sources = config["dataset"]["selected_sources"]
@@ -107,7 +109,7 @@ def apply_rule_filter_if_enabled(source_list, target_list, config, logger):
     return source_list, target_list
 
 def apply_semantic_filter_if_enabled(source_list, target_list, config, srclang, tgtlang, logger, sentence_model, model_pool):
-    if config["preprocessing"].get("apply_semantic_filter", False):
+    if config["preprocessing"].get("apply_semantic_filter", True):
         sem_cfg = config["filters"]["semantic_filter"]
         logger.info("🧠 Applying semantic filtering...")
         source_list, target_list = semantic_filter(
@@ -124,15 +126,29 @@ def apply_semantic_filter_if_enabled(source_list, target_list, config, srclang, 
         logger.info(f"✅ Semantic filter output: {len(source_list)} sentence pairs")
     return source_list, target_list
 
+def apply_lang_detect_filter_if_enabled(source_list, target_list, srclang, tgtlang, fasttext_model, config, logger):
+    if config["preprocessing"].get("apply_lang_detect_filter", True):
+        lang_cfg = config["filters"]["lang_detect_filter"]
+        logger.info("🌐 Applying language detection filter...")
+        source_list, target_list = lang_detect_filter(
+            source_list,
+            target_list,
+            srclang=srclang,
+            tgtlang=tgtlang,
+            model=fasttext_model,
+            batch_size=lang_cfg.get("batch_size", 1024),
+            min_score=lang_cfg.get("min_score", 0.9)
+        )
+        logger.info(f"✅ Language detection output: {len(source_list)} sentence pairs")
+    return source_list, target_list
+
 def run_validation(source_list, target_list, config, comet_model):
-    lang_detected, lang_score, quality_score = None, None, None
-    if config["validation"].get("language_detection", True):
-        lang_detected, lang_score = language_detection(target_list)
+    quality_score = None
     if config["validation"].get("quality_estimation", True):
         quality_score = quality_estimation(source_list, target_list, comet_model=comet_model)
-    return lang_detected, lang_score, quality_score
+    return quality_score
 
-def save_dataset(source_list, target_list, srclang, tgtlang, config, file_path, dataset_name, lang_pair, original_len, after_rule_len, after_semantic_len, lang_detected, lang_score, quality_score, logger):
+def save_dataset(source_list, target_list, srclang, tgtlang, ds_cfg, config, file_path, dataset_name, lang_pair, original_len, after_rule_len, after_semantic_len, after_lang_detect_len, quality_score, logger):
     save_format = config["output"].get("save_format", "txt")
     if save_format == "hf":
         dataset_dict = {srclang: source_list, tgtlang: target_list}
@@ -140,13 +156,13 @@ def save_dataset(source_list, target_list, srclang, tgtlang, config, file_path, 
         logger.info(f"✅ Hugging Face dataset saved to:\n  {file_path}")
 
         custom_metadata = {
+            "source": ds_cfg["source"],
             "dataset_name": dataset_name,
             "lang_pair": lang_pair,
             "original_rows": original_len,
             "after_rule": after_rule_len or original_len,
             "after_semantic": after_semantic_len or after_rule_len or original_len,
-            "target_language": lang_detected,
-            "lang_score": lang_score,
+            "after_lang_detect": after_lang_detect_len or after_semantic_len or after_rule_len or original_len,
             "quality_score": quality_score,
             "processed_at": datetime.utcnow().isoformat()
         }
@@ -163,7 +179,7 @@ def save_dataset(source_list, target_list, srclang, tgtlang, config, file_path, 
     else:
         raise ValueError(f"❌ Unknown output format: {save_format}")
 
-def process_dataset(ds_cfg, config, logger, sentence_model, model_pool, comet_model):
+def process_dataset(ds_cfg, config, logger, sentence_model, model_pool, comet_model, fasttext_model):
     source = ds_cfg["source"]
     srclang, tgtlang = config["dataset"]["lang_pair"]
     output_prefix = config["output"].get("filtered_prefix", "filtered")
@@ -175,11 +191,19 @@ def process_dataset(ds_cfg, config, logger, sentence_model, model_pool, comet_mo
     file_path = os.path.join(output_dir, lang_pair, dataset_name)
 
     # Cache check
-    if config["preprocessing"].get("cache", True) and os.path.exists(file_path):
+    if config["preprocessing"].get("from_cache", True) and os.path.exists(file_path):
         meta = load_custom_metadata(file_path)
         if meta:
             logger.info(f"✅ Cached: {meta['dataset_name']} — {meta['after_semantic']} pairs | QE: {meta['quality_score']}")
-            return None
+            return {
+        "source": meta['source'],
+        "name": meta['dataset_name'],
+        "original": meta["original_rows"],
+        "after_rule": meta["after_rule"],
+        "after_semantic": meta['after_semantic'],
+        "after_lang_detect": meta['after_lang_detect'],
+        "translation_quality": meta['quality_score']
+    }
         logger.info(f"⚠ Found dataset at {output_dir} but no custom metadata — processing anyway")
         
     BLUE = "\033[1;34m"
@@ -196,15 +220,41 @@ def process_dataset(ds_cfg, config, logger, sentence_model, model_pool, comet_mo
         sys.exit(1)
 
     original_len = len(source_list)
+
+    # Apply rule filter
     source_list, target_list = apply_rule_filter_if_enabled(source_list, target_list, config, logger)
     after_rule_len = len(source_list)
-    source_list, target_list = apply_semantic_filter_if_enabled(source_list, target_list, config, srclang, tgtlang, logger, sentence_model, model_pool)
-    after_semantic_len = len(source_list)
+    if after_rule_len == 0:
+        logger.warning("⚠️ All segments removed after rule filter. Skipping further filtering.")
+        after_semantic_len = 0
+        after_lang_detect_len = 0
+    else:
+        # Apply semantic filter
+        source_list, target_list = apply_semantic_filter_if_enabled(
+            source_list, target_list, config, srclang, tgtlang, logger, sentence_model, model_pool
+        )
+        after_semantic_len = len(source_list)
+        if after_semantic_len == 0:
+            logger.warning("⚠️ All segments removed after semantic filter. Skipping further filtering.")
+            after_lang_detect_len = 0
+        else:
+            # Apply lang detect filter
+            source_list, target_list = apply_lang_detect_filter_if_enabled(
+                source_list, target_list, srclang, tgtlang, fasttext_model, config, logger
+            )
+            after_lang_detect_len = len(source_list)
+            if after_lang_detect_len == 0:
+                logger.warning("⚠️ All segments removed after language detection filter.")
 
-    lang_detected, lang_score, quality_score = run_validation(source_list, target_list, config, comet_model)
-    logger.info(f"✅ Validation done. Language:{lang_detected} Score:{lang_score} QE:{quality_score}")
+    # Only run validation if something remains
+    if len(source_list) > 0:
+        quality_score = run_validation(source_list, target_list, config, comet_model)
+        logger.info(f"✅ Validation done. QE:{quality_score}")
+    else:
+        quality_score = None
+        logger.info("⚠️ Skipped validation because no segments remain after filtering.")
 
-    save_dataset(source_list, target_list, srclang, tgtlang, config, file_path, dataset_name, lang_pair, original_len, after_rule_len, after_semantic_len, lang_detected, lang_score, quality_score, logger)
+    save_dataset(source_list, target_list, srclang, tgtlang,ds_cfg, config, file_path, dataset_name, lang_pair, original_len, after_rule_len, after_semantic_len, after_lang_detect_len, quality_score, logger)
 
     return {
         "source": ds_cfg["source"],
@@ -212,7 +262,7 @@ def process_dataset(ds_cfg, config, logger, sentence_model, model_pool, comet_mo
         "original": original_len,
         "after_rule": after_rule_len,
         "after_semantic": after_semantic_len,
-        "language_detected": (lang_detected, lang_score),
+        "after_lang_detect": after_lang_detect_len,
         "translation_quality": quality_score
     }
 
@@ -220,22 +270,23 @@ def log_final_summary(summary_log, logger):
     total_original = sum(entry["original"] for entry in summary_log)
     total_after_rule = sum(entry["after_rule"] for entry in summary_log)
     total_after_semantic = sum(entry["after_semantic"] for entry in summary_log)
+    total_after_lang_detect = sum(entry["after_lang_detect"] for entry in summary_log)  
     summary_table = [
-        [entry["source"], entry["name"], entry["original"], entry["after_rule"], entry["after_semantic"], entry["language_detected"], entry["translation_quality"]]
+        [entry["source"], entry["name"], entry["original"], entry["after_rule"], entry["after_semantic"], entry["after_lang_detect"], entry["translation_quality"]]
         for entry in summary_log
     ]
-    summary_table.append(["TOTAL", "-", total_original, total_after_rule, total_after_semantic, "-", "-"])
-    logger.info("\n📊 Final Dataset Summary:\n" + tabulate(summary_table, headers=["Source", "Dataset", "Original", "After Rule", "After Semantic", "Language Detected", "Translation Quality"], tablefmt="github"))
+    summary_table.append(["TOTAL", "-", total_original, total_after_rule, total_after_semantic, total_after_lang_detect, "-"])
+    logger.info("\n📊 Final Dataset Summary:\n" + tabulate(summary_table, headers=["Source", "Dataset", "Original", "After Rule", "After Semantic", "After Lang Detect", "Translation Quality"], tablefmt="github"))
 
 def main(config_path):
     config = load_config(config_path)
     logger = setup_logger(config)
     logger.info("🚀 Starting preprocessing pipeline")
-    sentence_model, model_pool, comet_model = load_models(config)
+    sentence_model, model_pool, comet_model, fasttext_model = load_models(config)
     summary_log = []
     datasets = collect_datasets(config)
     for ds_cfg in tqdm(datasets, desc="\033[1;34mProcessing datasets\033[0m"):
-        summary = process_dataset(ds_cfg, config, logger, sentence_model, model_pool, comet_model)
+        summary = process_dataset(ds_cfg, config, logger, sentence_model, model_pool, comet_model, fasttext_model)
         if summary:
             summary_log.append(summary)
     sentence_model.stop_multi_process_pool(model_pool)

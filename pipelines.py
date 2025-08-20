@@ -163,7 +163,47 @@ def semantic_filter(
     return filtered_source, filtered_target
 
     
+def lang_detect_filter(
+    source_list,
+    target_list,
+    srclang,
+    tgtlang,
+    model,
+    batch_size=1024,
+    min_score=0.9
+):
+    
+    assert len(source_list) == len(target_list), "Source and target lists must be of the same length."
+    logger.info("Language detection filter started")
+    logger.info(f"Total sentence pairs: {len(source_list)} | Batch size: {batch_size} | Min score: {min_score}")
 
+    def detect(lines):
+        results, scores = [], []
+        for i in range(0, len(lines), batch_size):
+            batch = lines[i:i+batch_size]
+            predictions = model.predict(batch, k=1)
+            codes = [pred[0].replace("__label__", "") for pred in predictions[0]]
+            scs   = [pred[0] for pred in predictions[1]]
+            results.extend(codes)
+            scores.extend(scs)
+        return results, scores
+
+    source_list = [s.replace("\n", " ") for s in source_list]
+    target_list = [t.replace("\n", " ") for t in target_list]
+    # Detect languages
+    src_codes, src_scores = detect(source_list)
+    tgt_codes, tgt_scores = detect(target_list)
+
+    filtered_source = []
+    filtered_target = []
+
+    for s, t, sl, tl, ss, ts in zip(source_list, target_list, src_codes, tgt_codes, src_scores, tgt_scores):
+        if sl == srclang and tl == tgtlang and ss >= min_score and ts >= min_score:
+            filtered_source.append(s)
+            filtered_target.append(t)
+
+    logger.info(f"Language detection complete → Remaining: {len(filtered_source)} pairs")
+    return filtered_source, filtered_target
 
 
 if __name__=="__main__":

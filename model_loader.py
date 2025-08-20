@@ -2,6 +2,7 @@ from sentence_transformers import SentenceTransformer
 from comet import download_model, load_from_checkpoint
 import logging
 import torch
+import fasttext
 
 logger = logging.getLogger("my_logger")
 
@@ -49,3 +50,11 @@ def load_sentence_transformer(srclang, tgtlang):
 def get_comet_model(model_name="masakhane/africomet-qe-stl"):
     model_path = download_model(model_name)  # downloads once and caches
     return load_from_checkpoint(model_path)
+
+def get_fasttext_model(model_name="lid.176.bin"):
+    model = fasttext.load_model("lid.176.bin")
+    return model
+
+
+
+#HF - AfriDocMT-tech

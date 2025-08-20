@@ -99,4 +99,4 @@ if __name__ == "__main__":
     # download_opus("en", "am", ["wikimedia"])
     # opus_info("en", "am")
     url = "https://object.pouta.csc.fi/OPUS-wikimedia/v20230407/moses/am-en.txt.zip"
-    download_opus_single("en", "am", url)
+    # download_opus_single("en", "am", url)

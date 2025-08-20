@@ -61,74 +61,72 @@ dataset:
       path: "masakhane/AfriDocMT"
       split: "train"
       config_name: "tech"
-      src_col: "am"
-      tgt_col: "en"
+      src_col: "en"
+      tgt_col: "am"
       format: "flat_column"
     - name: "AfriDocMT-health"
       path: "masakhane/AfriDocMT"
       split: "train"
       config_name: "health"
-      src_col: "am"
-      tgt_col: "en"
+      src_col: "en"
+      tgt_col: "am"
       format: "flat_column"
     - name: "AfriDocMT-doc_tech"
       path: "masakhane/AfriDocMT"
       split: "train"
       config_name: "doc_tech"
-      src_col: "am"
-      tgt_col: "en"
+      src_col: "en"
+      tgt_col: "am"
       format: "flat_column"
     - name: "AfriDocMT-doc_health"
       path: "masakhane/AfriDocMT"
       split: "train"
       config_name: "doc_health"
-      src_col: "am"
-      tgt_col: "en"
+      src_col: "en"
+      tgt_col: "am"
       format: "flat_column"
     - name: "AfriDocMT-doc_tech_25"
       path: "masakhane/AfriDocMT"
       split: "train"
       config_name: "doc_tech_25"
-      src_col: "am"
-      tgt_col: "en"
+      src_col: "en"
+      tgt_col: "am"
       format: "flat_column"
     - name: "AfriDocMT-doc_health_25"
       path: "masakhane/AfriDocMT"
       split: "train"
       config_name: "doc_health_25"
-      src_col: "am"
-      tgt_col: "en"
+      src_col: "en"
+      tgt_col: "am"
       format: "flat_column"
     - name: "AfriDocMT-doc_tech_5"
       path: "masakhane/AfriDocMT"
       split: "train"
       config_name: "doc_tech_5"
-      src_col: "am"
-      tgt_col: "en"
+      src_col: "en"
+      tgt_col: "am"
       format: "flat_column"
     - name: "AfriDocMT-doc_health_5"
       path: "masakhane/AfriDocMT"
       split: "train"
       config_name: "doc_health_5"
-      src_col: "am"
-      tgt_col: "en"
+      src_col: "en"
+      tgt_col: "am"
       format: "flat_column"
     - name: "AfriDocMT-doc_tech_10"
       path: "masakhane/AfriDocMT"
       split: "train"
       config_name: "doc_tech_10"
-      src_col: "am"
-      tgt_col: "en"
+      src_col: "en"
+      tgt_col: "am"
       format: "flat_column"
     - name: "AfriDocMT-doc_health_10"
       path: "masakhane/AfriDocMT"
       split: "train"
       config_name: "doc_health_10"
-      src_col: "am"
-      tgt_col: "en"
+      src_col: "en"
+      tgt_col: "am"
       format: "flat_column"
-
-
   opus:
     - name: "wikimedia"
       url: "https://object.pouta.csc.fi/OPUS-wikimedia/v20230407/moses/am-en.txt.zip"
@@ -188,7 +186,7 @@ preprocessing:
   lowercase: true
   apply_rule_filter: true
   apply_semantic_filter: true
-  cache: true
+  from_cache: true
 
 filters:
   rule_filter:
@@ -198,6 +196,9 @@ filters:
   semantic_filter:
     threshold: 0.7
     chunk_size: 1000
+  lang_detect_filter:
+    batch_size: 1000
+    min_score: 0.9
 
 validation:
   quality_estimation: true
