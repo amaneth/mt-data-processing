@@ -3,6 +3,8 @@ import logging
 import pandas as pd
 from datasets import load_from_disk, Dataset, concatenate_datasets
 
+import argparse
+
 # Reuse deduplication function from pipelines.py
 from pipelines import deduplicate_df  
 
@@ -50,6 +52,15 @@ def merge_and_deduplicate(data_dir=DATA_DIR, src_col="en", tgt_col="am") -> Data
 
 
 if __name__ == "__main__":
-    merged_dataset = merge_and_deduplicate()
-    merged_dataset.save_to_disk("preprocess_outputs/en-am-merged")
+    parser = argparse.ArgumentParser(description="Merge and deduplicate datasets")
+    parser.add_argument("--data_dir", type=str, default=DATA_DIR, help="Directory containing datasets to merge")
+    parser.add_argument("--src_col", type=str, default="en", help="Source lallnguage column name")
+    parser.add_argument("--tgt_col", type=str, required=True, help="Target language column name")
+    args = parser.parse_args()
+    merged_dataset = merge_and_deduplicate(
+        data_dir=args.data_dir,
+        src_col=args.src_col,
+        tgt_col=args.tgt_col
+    )
+    merged_dataset.save_to_disk(f"preprocess_outputs/{args.src_col}-{args.tgt_col}-merged")
     logger.info("Saved merged and deduplicated dataset to preprocess_outputs/en-am-merged")
