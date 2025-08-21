@@ -17,105 +17,66 @@ logger = logging.getLogger("my_logger")
 
 
 
-def rule_filter(source_texts, target_texts, min_length=3, max_length=200, max_length_ratio=2.0, lower=False):
+def deduplicate_df(df: pd.DataFrame) -> pd.DataFrame:
     
-    logger.debug(f"Source length:{len(source_texts)} Target Legnth:{len(target_texts)}")
-    df = pd.DataFrame({"Source": source_texts, "Target": target_texts})
-    logger.info(f"Rule filter started: initial rows = {df.shape[0]}")
- 
-    # Delete nan
+    # Drop NaN
     df = df.dropna()
     logger.info(f"Step: Drop NaN\t\t--> Rows: {df.shape[0]}")
-
 
     # Drop duplicates
     df = df.drop_duplicates()
     logger.info(f"Step: Drop duplicates\t--> Rows: {df.shape[0]}")
 
-    # Drop copy-source rows
+    # Drop identical Source=Target rows
     df["Source-Copied"] = df['Source'] == df['Target']
-    #display(df.loc[df['Source-Copied'] == True]) # display only copy-sourced rows
     df = df.set_index(['Source-Copied'])
-
-    try: # To avoid (KeyError: '[True] not found in axis') if there are no source-copied cells
-        df = df.drop([True]) # Boolean, not string, do not add quotes
-    except:
+    try:
+        df = df.drop([True])  # drop rows where Source==Target
+    except KeyError:
         pass
-    
-    df = df.reset_index()
-    df = df.drop(['Source-Copied'], axis = 1)
+    df = df.reset_index().drop(['Source-Copied'], axis=1)
     logger.info(f"Step: Drop identical rows\t--> Rows: {df.shape[0]}")
 
+    return df
 
-    # Drop too-long rows (source or target)
-    # Based on your language, change the values "2" and "200"
-    df["Too-Long"] = ((df['Source'].str.count(' ')+1) > (df['Target'].str.count(' ')+1) * max_length_ratio) |  \
-                     ((df['Target'].str.count(' ')+1) > (df['Source'].str.count(' ')+1) * max_length_ratio) |  \
-                     ((df['Source'].str.count(' ')+1) > max_length) |  \
+
+def rule_filter(source_texts, target_texts, min_length=3, max_length=200, max_length_ratio=2.0, lower=False):
+    logger.debug(f"Source length:{len(source_texts)} Target length:{len(target_texts)}")
+    df = pd.DataFrame({"Source": source_texts, "Target": target_texts})
+    logger.info(f"Rule filter started: initial rows = {df.shape[0]}")
+
+    df = deduplicate_df(df)
+
+    # Drop too-long rows
+    df["Too-Long"] = ((df['Source'].str.count(' ')+1) > (df['Target'].str.count(' ')+1) * max_length_ratio) | \
+                     ((df['Target'].str.count(' ')+1) > (df['Source'].str.count(' ')+1) * max_length_ratio) | \
+                     ((df['Source'].str.count(' ')+1) > max_length) | \
                      ((df['Target'].str.count(' ')+1) > max_length)
-                
-    #display(df.loc[df['Too-Long'] == True]) # display only too long rows
+    
     df = df.set_index(['Too-Long'])
-
-    try: # To avoid (KeyError: '[True] not found in axis') if there are no too-long cells
-        df = df.drop([True]) # Boolean, not string, do not add quotes
-    except:
+    try:
+        df = df.drop([True])
+    except KeyError:
         pass
-
-    df = df.reset_index()
-    df = df.drop(['Too-Long'], axis = 1)
+    df = df.reset_index().drop(['Too-Long'], axis=1)
     logger.info(f"Step: Drop too-long\t--> Rows: {df.shape[0]}")
 
-
-    # Drop too-short rows (source or target)
-    # Based on your language, change the values "5"
-    df["Too-Short"] = ((df['Source'].str.len()) <= min_length) |  \
-                      ((df['Target'].str.len()) <= min_length)
-                
+    # Drop too-short rows
+    df["Too-Short"] = ((df['Source'].str.len()) <= min_length) | ((df['Target'].str.len()) <= min_length)
     df = df.set_index(['Too-Short'])
-
-    try: # To avoid (KeyError: '[True] not found in axis') if there are no too-long cells
-        df = df.drop([True]) # Boolean, not string, do not add quotes
-    except:
+    try:
+        df = df.drop([True])
+    except KeyError:
         pass
-
-    df = df.reset_index()
-    df = df.drop(['Too-Short'], axis = 1)
+    df = df.reset_index().drop(['Too-Short'], axis=1)
     logger.info(f"Step: Drop too-short\t--> Rows: {df.shape[0]}")
 
-
     # Remove HTML and normalize
-    # Use str() to avoid (TypeError: expected string or bytes-like object)
-    # Note: removing tags should be before removing empty cells because some cells might have only tags and become empty.
-
     df = df.replace(r'<.*?>|&lt;.*?&gt;|&?(amp|nbsp|quot);|{}', ' ', regex=True)
-    df = df.replace(r'  ', ' ', regex=True)  # replace double-spaces with one space
+    df = df.replace(r'  ', ' ', regex=True)
     logger.info(f"Step: Clean HTML\t--> Rows: {df.shape[0]}")
 
-
-    # Lower-case the data
-    if lower == True:
-        df['Source'] = df['Source'].str.lower()
-        df['Target'] = df['Target'].str.lower()
-        logger.info("Step: Lowercased rows")
-    else:
-        logger.info("Step: Truecased rows retained")
-
-
-    # Replace empty cells with NaN
-    df = df.replace(r'^\s*$', np.nan, regex=True)
-    logger.info(f"Step: Drop new NaNs\t--> Rows: {df.shape[0]}")
-
-    # Delete nan (already there, or generated from the previous steps)
-    df = df.dropna()
-    logger.info(f"Step: Shuffled rows\t--> Rows: {df.shape[0]}")
-
-
-    # Shuffle the data
-    df = df.sample(frac=1).reset_index(drop=True)
-    logger.info(f"Step: Shuffled rows\t--> Rows: {df.shape[0]}")
-
-    return df["Source"].tolist(), df["Target"].tolist()
+    return df
 
 
 def semantic_filter(

@@ -2,7 +2,7 @@
 
 dataset:
   lang_pair: ["en", "am"]
-  selected_sources: ["table"] 
+  selected_sources: ["hf", "opus", "url", "table"] 
 
   hf:
     - name: "smol"
