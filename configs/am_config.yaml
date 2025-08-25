@@ -208,7 +208,6 @@ filters:
 
 validation:
   quality_estimation: true
-  language_detection: true
 
 output:
   filtered_prefix: "filtered"
@@ -220,3 +219,5 @@ logging:
   debug: true
   log_dir: "logs/"
   log_file: "en-am.log"
+
+  
