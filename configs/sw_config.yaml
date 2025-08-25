@@ -8,16 +8,16 @@ dataset:
     - name: "smol"
       path: "google/smol"
       split: "train"
-      config_name: "smolsent__en_am"
+      config_name: "smolsent__en_sw"
       src_col: "src"
       tgt_col: "trg"
       format: "flat_column"
     - name: "mafand"
       path: "masakhane/mafand"
-      split: "validation+test"
-      config_name: "en-amh"
+      split: "train+validation+test"
+      config_name: "en-swa"
       src_key: "en"
-      tgt_key: "amh"
+      tgt_key: ""
       column: "translation"
       "format": "nested_translation"
     - name: "Pontoon-Translations"
@@ -201,9 +201,9 @@ filters:
     max_length_ratio: 2.0
   semantic_filter:
     threshold: 0.7
-    chunk_size: 1024
+    chunk_size: 1000
   lang_detect_filter:
-    batch_size: 1024
+    batch_size: 1000
     min_score: 0.9
 
 validation:
@@ -213,7 +213,7 @@ validation:
 output:
   filtered_prefix: "filtered"
   save_format: "hf"  # or txt, csv, json
-  save_dir: "preprocess_outputs/"
+  save_dir: "preprocess_outputs"
 
 
 logging:

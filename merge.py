@@ -62,5 +62,5 @@ if __name__ == "__main__":
         src_col=args.src_col,
         tgt_col=args.tgt_col
     )
-    merged_dataset.save_to_disk(f"preprocess_outputs/{args.src_col}-{args.tgt_col}-merged")
+    merged_dataset.save_to_disk(f"preprocess_outputs/{args.src_col}-{args.tgt_col}/{args.src_col}-{args.tgt_col}-merged")
     logger.info("Saved merged and deduplicated dataset to preprocess_outputs/en-am-merged")

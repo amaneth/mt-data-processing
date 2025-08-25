@@ -189,10 +189,13 @@ def process_dataset(ds_cfg, config, logger, sentence_model, model_pool, comet_mo
     lang_pair = f"{srclang}-{tgtlang}"
     output_dir = config["output"].get("save_dir", os.path.join(raw_dir, "filtered_dataset"))
     file_path = os.path.join(output_dir, lang_pair, dataset_name)
+    exclude_datasets_path = os.path.join(output_dir, lang_pair, "exclude/", dataset_name)
+
+    print(exclude_datasets_path)
 
     # Cache check
-    if config["preprocessing"].get("from_cache", True) and os.path.exists(file_path):
-        meta = load_custom_metadata(file_path)
+    if config["preprocessing"].get("from_cache", True) and (os.path.exists(file_path) or os.path.exists(exclude_datasets_path)):
+        meta = load_custom_metadata(file_path) or load_custom_metadata(exclude_datasets_path)
         if meta:
             logger.info(f"✅ Cached: {meta['dataset_name']} — {meta['after_semantic']} pairs | QE: {meta['quality_score']}")
             return {
@@ -299,7 +302,7 @@ def main(config_path):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run preprocessing pipeline")
     parser.add_argument(
-        "--config",
+        "--conf`ig",
         type=str,
         required=True,
         help="Path to the config YAML file(required)"
