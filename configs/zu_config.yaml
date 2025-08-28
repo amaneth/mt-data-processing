@@ -1,0 +1,129 @@
+dataset:
+  lang_pair: ["en", "zu"]
+  selected_sources: ["hf", "url"]
+  hf:
+    - name: "smol"
+      path: "google/smol"
+      split: "train"
+      config_name: "smolsent__en_zu"
+      src_col: "src"
+      tgt_col: "trg"
+      format: "flat_column"
+    - name: "Pontoon-Translations"
+      path: "ayymen/Pontoon-Translations"
+      split: "train"
+      config_name: "en-zu"
+      src_col: "source_string"
+      tgt_col: "target_string"
+      format: "flat_column"
+    - name: "Weblate-Translations"
+      path: "ayymen/Weblate-Translations"
+      split: "train"
+      config_name: "en-zu"
+      src_col: "source_string"
+      tgt_col: "target_string"
+      format: "flat_column"
+    - name: "ntrex"
+      path: "davidstap/NTREX"
+      split: "test"
+      src_config: "eng_Latn"
+      tgt_config: "zul_Latn"
+      column: "text"
+      "format": "dual_config"
+    - name: "polynews-parallel"
+      path: "aiana94/polynews-parallel"
+      split: "train"
+      config_name: "eng_Latn-zul_Latn"
+      src_col: "src"
+      tgt_col: "tgt"
+      format: "flat_column"
+    - name: "mafand"
+      path: "masakhane/mafand"
+      split: "train"
+      config_name: "en-zul"
+      column: "translation"
+      src_key: "en"
+      tgt_key: "zul"
+      format: "nested_translation"
+    - name: "mafand-dev"
+      path: "masakhane/mafand"
+      split: "validation"
+      config_name: "en-zul"
+      column: "translation"
+      src_key: "en"
+      tgt_key: "zul"
+      format: "nested_translation"
+    - name: "mafand-test"
+      path: "masakhane/mafand"
+      split: "test"
+      config_name: "en-zul"
+      column: "translation"
+      src_key: "en"
+      tgt_key: "zul"
+      format: "nested_translation"
+    - name: "AfriDocMT-tech"
+      path: "masakhane/AfriDocMT"
+      split: "train"
+      config_name: "tech"
+      src_col: "en"
+      tgt_col: "zu"
+      format: "flat_column"
+    - name: "AfriDocMT-health"
+      path: "masakhane/AfriDocMT"
+      split: "train"
+      config_name: "health"
+      src_col: "en"
+      tgt_col: "zu"
+      format: "flat_column"
+  url:
+    - name: "Ukuxhumana"
+      src_url: "https://raw.githubusercontent.com/umuzi-org/Ukuxhumana/master/data/train.en"
+      tgt_url: "https://raw.githubusercontent.com/umuzi-org/Ukuxhumana/master/data/train.zu"
+    - name: "Umsuka"
+      src_url: "https://raw.githubusercontent.com/umuzi-org/Umsuka/master/data/train.en"
+      tgt_url: "https://raw.githubusercontent.com/umuzi-org/Umsuka/master/data/train.zu"
+    - name: "isiZulu_train"
+      src_url: "https://raw.githubusercontent.com/umuzi-org/isiZulu/master/data/train.en"
+      tgt_url: "https://raw.githubusercontent.com/umuzi-org/isiZulu/master/data/train.zu"
+    - name: "isiZulu_eval"
+      src_url: "https://raw.githubusercontent.com/umuzi-org/isiZulu/master/data/eval.en"
+      tgt_url: "https://raw.githubusercontent.com/umuzi-org/isiZulu/master/data/eval.zu"
+  table: []
+
+download:
+  output_dir: "raw/"
+  dataset_cache: "dataset_cache"
+  model_cache: "model_cache"
+
+preprocessing:
+  lowercase: true
+  apply_rule_filter: true
+  apply_semantic_filter: true
+  apply_lang_detect_filter: false
+  from_cache: false
+
+filters:
+  rule_filter:
+    min_length: 3
+    max_length: 200
+    max_length_ratio: 2.0
+  semantic_filter:
+    threshold: 0.7
+    chunk_size: 1000
+  lang_detect_filter:
+    batch_size: 1000
+    min_score: 0.5
+
+validation:
+  quality_estimation: true
+  language_detection: true
+
+output:
+  filtered_prefix: "filtered"
+  save_format: "hf"
+  save_dir: "preprocess_outputs"
+
+logging:
+  debug: true
+  log_dir: "logs/"
+  log_file: "en-zu.log"

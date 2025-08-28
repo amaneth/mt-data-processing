@@ -1,0 +1,147 @@
+dataset:
+  lang_pair: ["en", "so"]
+  selected_sources: ["hf", "url"]
+
+  hf:
+    - name: "flores"
+      path: "facebook/flores"
+      split: "dev"
+      config_name: "eng_Latn-som_Latn"
+      src_col: "sentence_eng_Latn"
+      tgt_col: "sentence_som_Latn"
+      format: "flat_column"
+    - name: "smol"
+      path: "google/smol"
+      split: "train"
+      config_name: "smolsent__en_so"
+      src_col: "src"
+      tgt_col: "trg"
+      format: "flat_column"
+    - name: "nazimali-quran-itani-maududi"
+      path: "nazimali/quran"
+      split: "train"
+      src_col: "translation-en-itani"
+      tgt_col: "translation-so-abduh"
+      format: "flat_column"
+    - name: "ntrex"
+      path: "davidstap/NTREX"
+      split: "test"
+      src_config: "eng_Latn"
+      tgt_config: "som_Latn"
+      column: "text"
+      "format": "dual_config"
+    # - name: "ted_talks_iwslt"
+    #   path: "IWSLT/ted_talks_iwslt"
+    #   split: "train"
+    #   config_name: "en-so"
+    #   src_col: "translation.en"
+    #   tgt_col: "translation.so"
+    #   format: "flat_column"
+    - name: "opus_infopankki"
+      path: "Helsinki-NLP/opus_infopankki"
+      split: "train"
+      config_name: "en-so"
+      column: "translation"
+      src_key: "en"
+      tgt_key: "so"
+      format: "nested_translation"
+    # - name: "tanzil"
+    #   path: "Helsinki-NLP/tanzil"
+    #   split: "train"
+    #   config_name: "en-so"
+    #   src_col: "en"
+    #   tgt_col: "so"
+    #   format: "flat_column"
+    # - name: "udhr"
+    #   path: "community-datasets/udhr"
+    #   split: "train"
+    #   config_name: "en-so"
+    #   src_col: "en"
+    #   tgt_col: "so"
+    #   format: "flat_column"
+    - name: "Weblate-Translations"
+      path: "ayymen/Weblate-Translations"
+      split: "train"
+      config_name: "en-so"
+      src_col: "source_string"
+      tgt_col: "target_string"
+      format: "flat_column"
+    # - name: "polynews-parallel"
+    #   path: "aiana94/polynews-parallel"
+    #   split: "train"
+    #   config_name: "eng_Latn-som_Latn"
+    #   src_col: "src"
+    #   tgt_col: "tgt"
+    #   format: "flat_column"
+    - name: "quran_multilingual_parallel"
+      path: "freococo/quran_multilingual_parallel"
+      split: "train"
+      config_name: "default"
+      src_col: "english"
+      tgt_col: "somali"
+      format: "flat_column"
+
+  opus:
+    # - name: "wikimedia"
+    #   url: "https://object.pouta.csc.fi/OPUS-wikimedia/v20230407/moses/so-en.txt.zip"
+    # - name: "TED2020"
+    #   url: "https://object.pouta.csc.fi/OPUS-TED2020/v1/moses/so-en.txt.zip"
+    # - name: "bible-uedin"
+    #   url: "https://object.pouta.csc.fi/OPUS-bible-uedin/v1/moses/so-en.txt.zip"
+    # - name: "GNOME"
+    #   url: "https://object.pouta.csc.fi/OPUS-GNOME/v1/moses/so-en.txt.zip"
+    # - name: "OpenSubtitles"
+    #   url: "https://object.pouta.csc.fi/OPUS-OpenSubtitles/v2024/moses/so-en.txt.zip"
+    # - name: "Tatoeba"
+    #   url: "https://object.pouta.csc.fi/OPUS-Tatoeba/v2023-04-12/moses/so-en.txt.zip"
+    # - name: "Tanzil"
+    #   url: "https://object.pouta.csc.fi/OPUS-Tanzil/v1/moses/so-en.txt.zip"
+    # - name: "infopankki"
+    #   url: "https://object.pouta.csc.fi/OPUS-infopankki/v1/moses/so-en.txt.zip"
+    # - name: "tico-19"
+    #   url: "https://object.pouta.csc.fi/OPUS-tico-19/v1/moses/so-en.txt.zip"
+
+  url:
+    - name: "horn-mt"
+      src_url: "https://raw.githubusercontent.com/asmelashteka/HornMT/refs/heads/main/data/eng.txt"
+      tgt_url: "https://raw.githubusercontent.com/asmelashteka/HornMT/refs/heads/main/data/som.txt"
+
+  table: []
+
+download:
+  output_dir: "raw/"
+  dataset_cache: "dataset_cache"
+  model_cache: "model_cache"
+
+preprocessing:
+  lowercase: true
+  apply_rule_filter: true
+  apply_semantic_filter: true
+  apply_lang_detect_filter: false
+  from_cache: false
+
+filters:
+  rule_filter:
+    min_length: 3
+    max_length: 200
+    max_length_ratio: 2.0
+  semantic_filter:
+    threshold: 0.7
+    chunk_size: 1000
+  lang_detect_filter:
+    batch_size: 1000
+    min_score: 0.5
+
+validation:
+  quality_estimation: true
+  language_detection: true
+
+output:
+  filtered_prefix: "filtered"
+  save_format: "hf"
+  save_dir: "preprocess_outputs"
+
+logging:
+  debug: true
+  log_dir: "logs/"
+  log_file: "en-so.log"
