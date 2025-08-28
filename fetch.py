@@ -11,21 +11,6 @@ import csv
 logger = logging.getLogger("my_logger")
 
 
-def opus_info(srclang, tgtlang):
-    opus_url = "https://opus.nlpl.eu/opusapi/?source="+srclang+"&target="+tgtlang+"&preprocessing=moses&version=latest"
-    response = requests.get(opus_url)
-    response_json = response.json()
-    corpora = response_json["corpora"]
-    
-    logger.info(f"\nAvailable corpora for {srclang} → {tgtlang}:\n")
-    for entry in corpora:
-        logger.info(f"- Corpus: {entry['corpus']}")
-        logger.info(f"  Pairs: {entry.get('alignment_pairs', 'N/A')}")
-        logger.info(f"  Size: {entry.get('size', 'N/A')} KB")
-        logger.info(f"  URL : {entry['url']}\n")
-
-    return corpora
-
 
 
 
