@@ -129,53 +129,6 @@ dataset:
     src_key: en
     tgt_key: ha
     format: nested_translation
-  - name: seamless-align
-    path: jhu-clsp/seamless-align
-    split: train
-    config_name: en-ha
-    src_col: src
-    tgt_col: tgt
-    format: flat_column
-  - name: udhr
-    path: community-datasets/udhr
-    split: train
-    src_col: en
-    tgt_col: ha
-    format: flat_column
-  - name: subscene
-    path: refine-ai/subscene
-    split: train
-    config_name: hausa
-    src_col: src
-    tgt_col: tgt
-    format: flat_column
-    trust_remote_code: true
-  - name: kenyan-low-resource-language-data
-    path: thinkKenya/kenyan-low-resource-language-data
-    split: train
-    src_col: english_text
-    tgt_col: hausa_text
-    format: flat_column
-  - name: salt
-    path: Sunbird/salt
-    split: train
-    src_col: en
-    tgt_col: ha
-    format: flat_column
-  - name: ParaBLoCC
-    path: pviechn1/ParaBLoCC
-    split: train
-    src_col: en
-    tgt_col: ha
-    format: flat_column
-  - name: Gamayun-kits
-    path: CLEAR-Global/Gamayun-kits
-    split: train
-    config_name: en-hau
-    src_col: src
-    tgt_col: tgt
-    format: flat_column
-
 download:
   output_dir: raw/
   dataset_cache: dataset_cache
@@ -185,7 +138,7 @@ preprocessing:
   apply_rule_filter: true
   apply_semantic_filter: true
   apply_lang_detect_filter: true
-  from_cache: true
+  from_cache: false
 filters:
   rule_filter:
     min_length: 3
