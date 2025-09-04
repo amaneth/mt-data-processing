@@ -1,199 +1,191 @@
-# config.yaml
-
 dataset:
-  lang_pair: ["en", "am"]
-  selected_sources: ["hf", "opus", "url", "table"] 
-
+  lang_pair:
+  - en
+  - am
+  selected_sources:
+  - hf
+  - opus
+  - url
+  - table
   hf:
-    - name: "smol"
-      path: "google/smol"
-      split: "train"
-      config_name: "smolsent__en_am"
-      src_col: "src"
-      tgt_col: "trg"
-      format: "flat_column"
-    - name: "mafand"
-      path: "masakhane/mafand"
-      split: "validation+test"
-      config_name: "en-amh"
-      src_key: "en"
-      tgt_key: "amh"
-      column: "translation"
-      "format": "nested_translation"
-    - name: "Pontoon-Translations"
-      path: "ayymen/Pontoon-Translations"
-      split: "train"
-      config_name: "en-am"
-      src_col: "source_string"
-      tgt_col: "target_string"
-      format: "flat_column"
-    - name: "Weblate-Translations"
-      path: "ayymen/Weblate-Translations"
-      split: "train"
-      config_name: "en-am"
-      src_col: "source_string"
-      tgt_col: "target_string"
-      format: "flat_column"
-    - name: "nazimali-quran-itani-maududi"
-      path: "nazimali/quran"
-      split: "train"
-      src_col: "translation-en-itani"
-      tgt_col: "translation-am-sadiq"
-      format: "flat_column"
-    - name: "ntrex"
-      path: "davidstap/NTREX"
-      split: "test"
-      src_config: "eng_Latn"
-      tgt_config: "amh_Ethi"
-      column: "text"
-      "format": "dual_config"
-
-    #AfriDocMT dataset subsets
-    - name: "AfriDocMT-tech"
-      path: "masakhane/AfriDocMT"
-      split: "train"
-      config_name: "tech"
-      src_col: "en"
-      tgt_col: "am"
-      format: "flat_column"
-    - name: "AfriDocMT-health"
-      path: "masakhane/AfriDocMT"
-      split: "train"
-      config_name: "health"
-      src_col: "en"
-      tgt_col: "am"
-      format: "flat_column"
-    - name: "AfriDocMT-doc_tech"
-      path: "masakhane/AfriDocMT"
-      split: "train"
-      config_name: "doc_tech"
-      src_col: "en"
-      tgt_col: "am"
-      format: "flat_column"
-    - name: "AfriDocMT-doc_health"
-      path: "masakhane/AfriDocMT"
-      split: "train"
-      config_name: "doc_health"
-      src_col: "en"
-      tgt_col: "am"
-      format: "flat_column"
-    - name: "AfriDocMT-doc_tech_25"
-      path: "masakhane/AfriDocMT"
-      split: "train"
-      config_name: "doc_tech_25"
-      src_col: "en"
-      tgt_col: "am"
-      format: "flat_column"
-    - name: "AfriDocMT-doc_health_25"
-      path: "masakhane/AfriDocMT"
-      split: "train"
-      config_name: "doc_health_25"
-      src_col: "en"
-      tgt_col: "am"
-      format: "flat_column"
-    - name: "AfriDocMT-doc_tech_5"
-      path: "masakhane/AfriDocMT"
-      split: "train"
-      config_name: "doc_tech_5"
-      src_col: "en"
-      tgt_col: "am"
-      format: "flat_column"
-    - name: "AfriDocMT-doc_health_5"
-      path: "masakhane/AfriDocMT"
-      split: "train"
-      config_name: "doc_health_5"
-      src_col: "en"
-      tgt_col: "am"
-      format: "flat_column"
-    - name: "AfriDocMT-doc_tech_10"
-      path: "masakhane/AfriDocMT"
-      split: "train"
-      config_name: "doc_tech_10"
-      src_col: "en"
-      tgt_col: "am"
-      format: "flat_column"
-    - name: "AfriDocMT-doc_health_10"
-      path: "masakhane/AfriDocMT"
-      split: "train"
-      config_name: "doc_health_10"
-      src_col: "en"
-      tgt_col: "am"
-      format: "flat_column"
-
-
+  - name: smol
+    path: google/smol
+    split: train
+    config_name: smolsent__en_am
+    src_col: src
+    tgt_col: trg
+    format: flat_column
+  - name: mafand
+    path: masakhane/mafand
+    split: validation+test
+    config_name: en-amh
+    src_key: en
+    tgt_key: amh
+    column: translation
+    format: nested_translation
+  - name: Pontoon-Translations
+    path: ayymen/Pontoon-Translations
+    split: train
+    config_name: en-am
+    src_col: source_string
+    tgt_col: target_string
+    format: flat_column
+  - name: Weblate-Translations
+    path: ayymen/Weblate-Translations
+    split: train
+    config_name: en-am
+    src_col: source_string
+    tgt_col: target_string
+    format: flat_column
+  - name: nazimali-quran-itani-maududi
+    path: nazimali/quran
+    split: train
+    src_col: translation-en-itani
+    tgt_col: translation-am-sadiq
+    format: flat_column
+  - name: ntrex
+    path: davidstap/NTREX
+    split: test
+    src_config: eng_Latn
+    tgt_config: amh_Ethi
+    column: text
+    format: dual_config
+  - name: AfriDocMT-tech
+    path: masakhane/AfriDocMT
+    split: train
+    config_name: tech
+    src_col: en
+    tgt_col: am
+    format: flat_column
+  - name: AfriDocMT-health
+    path: masakhane/AfriDocMT
+    split: train
+    config_name: health
+    src_col: en
+    tgt_col: am
+    format: flat_column
+  - name: AfriDocMT-doc_tech
+    path: masakhane/AfriDocMT
+    split: train
+    config_name: doc_tech
+    src_col: en
+    tgt_col: am
+    format: flat_column
+  - name: AfriDocMT-doc_health
+    path: masakhane/AfriDocMT
+    split: train
+    config_name: doc_health
+    src_col: en
+    tgt_col: am
+    format: flat_column
+  - name: AfriDocMT-doc_tech_25
+    path: masakhane/AfriDocMT
+    split: train
+    config_name: doc_tech_25
+    src_col: en
+    tgt_col: am
+    format: flat_column
+  - name: AfriDocMT-doc_health_25
+    path: masakhane/AfriDocMT
+    split: train
+    config_name: doc_health_25
+    src_col: en
+    tgt_col: am
+    format: flat_column
+  - name: AfriDocMT-doc_tech_5
+    path: masakhane/AfriDocMT
+    split: train
+    config_name: doc_tech_5
+    src_col: en
+    tgt_col: am
+    format: flat_column
+  - name: AfriDocMT-doc_health_5
+    path: masakhane/AfriDocMT
+    split: train
+    config_name: doc_health_5
+    src_col: en
+    tgt_col: am
+    format: flat_column
+  - name: AfriDocMT-doc_tech_10
+    path: masakhane/AfriDocMT
+    split: train
+    config_name: doc_tech_10
+    src_col: en
+    tgt_col: am
+    format: flat_column
+  - name: AfriDocMT-doc_health_10
+    path: masakhane/AfriDocMT
+    split: train
+    config_name: doc_health_10
+    src_col: en
+    tgt_col: am
+    format: flat_column
   opus:
-    - name: "wikimedia"
-      url: "https://object.pouta.csc.fi/OPUS-wikimedia/v20230407/moses/am-en.txt.zip"
-      # base_url: "https://object.pouta.csc.fi/OPUS-wikimedia"
-      # format: "moses"
-      # filename_template: "moses/en-am.txt.zip"
-    - name: "TED2020"
-      url: "https://object.pouta.csc.fi/OPUS-TED2020/v1/moses/am-en.txt.zip"
-    - name: "bible-uedin"
-      url: "https://object.pouta.csc.fi/OPUS-bible-uedin/v1/moses/am-en.txt.zip"
-    - name: "GlobalVoices"
-      url: "https://object.pouta.csc.fi/OPUS-GlobalVoices/v2018q4/moses/am-en.txt.zip"
-    - name: "GNOME"
-      url: "https://object.pouta.csc.fi/OPUS-GNOME/v1/moses/am-en.txt.zip"
-    - name: "OpenSubtitles"
-      url: "https://object.pouta.csc.fi/OPUS-OpenSubtitles/v2024/moses/am-en.txt.zip"
-    - name: "Tatoeba"
-      url: "https://object.pouta.csc.fi/OPUS-Tatoeba/v2023-04-12/moses/am-en.txt.zip"
-    - name: "Tanzil"
-      url: "https://object.pouta.csc.fi/OPUS-Tanzil/v1/moses/am-en.txt.zip"
-     
-
+  - name: wikimedia
+    url: https://object.pouta.csc.fi/OPUS-wikimedia/v20230407/moses/am-en.txt.zip
+  - name: TED2020
+    url: https://object.pouta.csc.fi/OPUS-TED2020/v1/moses/am-en.txt.zip
+  - name: bible-uedin
+    url: https://object.pouta.csc.fi/OPUS-bible-uedin/v1/moses/am-en.txt.zip
+  - name: GlobalVoices
+    url: https://object.pouta.csc.fi/OPUS-GlobalVoices/v2018q4/moses/am-en.txt.zip
+  - name: GNOME
+    url: https://object.pouta.csc.fi/OPUS-GNOME/v1/moses/am-en.txt.zip
+  - name: OpenSubtitles
+    url: https://object.pouta.csc.fi/OPUS-OpenSubtitles/v2024/moses/am-en.txt.zip
+  - name: Tatoeba
+    url: https://object.pouta.csc.fi/OPUS-Tatoeba/v2023-04-12/moses/am-en.txt.zip
+  - name: Tanzil
+    url: https://object.pouta.csc.fi/OPUS-Tanzil/v1/moses/am-en.txt.zip
+  - name: tico-19
+    url: https://object.pouta.csc.fi/OPUS-tico-19/v1/moses/am-en.txt.zip
+  - name: CCMatrix v1
+    url: https://object.pouta.csc.fi/OPUS-CCMatrix/v1/moses/am-en.txt.zip
   url:
-    - name: "ethiopian-languages-legal"
-      src_url: "https://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/Legal/amh_eng/p_eng_ea.txt"
-      tgt_url: "https://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/Legal/amh_eng/p_amh_ea.txt"
-    - name: "ethiopian-languages-history"
-      src_url: "https://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/History/amh_eng/p_eng_ea"
-      tgt_url: "https://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/History/amh_eng/p_amh_ea"
-    - name: "ethiopian-languages-news"
-      src_url: "https://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/News/amh_eng/eng_ea.txt"
-      tgt_url: "https://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/News/amh_eng/amh_ea.txt"
-    - name: "ethiopian-languages-ebible"
-      src_url: "https://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/Spritual/e_bible/am_eng/P_eng_ea.txt"
-      tgt_url: "https://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/Spritual/e_bible/am_eng/P_amh_ea.txt"
-    - name: "ethiopian-languages-ethio_bible"
-      src_url: "https://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/Spritual/ethiopic_bible/eng_amh/p_eng_ea.txt"
-      tgt_url: "https://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/Spritual/ethiopic_bible/eng_amh/p_amh_ea.txt"
-    - name: "ethiopian-languages-jw_bible"
-      src_url: "https://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/Spritual/jw_bible/amh_eng/p_eng_ea.txt"
-      tgt_url: "https://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/Spritual/jw_bible/amh_eng/p_amh_ea.txt"
-    - name: "ethiopian-languages-jw_daily"
-      src_url: "https://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/Spritual/jw_daily/amh_eng/p_eng_ea"
-      tgt_url: "https://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/Spritual/jw_daily/amh_eng/p_amh_ea"
-    - name: "horn-mt"
-      src_url: "https://raw.githubusercontent.com/asmelashteka/HornMT/refs/heads/main/data/eng.txt"
-      tgt_url: "https://raw.githubusercontent.com/asmelashteka/HornMT/refs/heads/main/data/amh.txt" 
-
+  - name: ethiopian-languages-legal
+    src_url: https://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/Legal/amh_eng/p_eng_ea.txt
+    tgt_url: https://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/Legal/amh_eng/p_amh_ea.txt
+  - name: ethiopian-languages-history
+    src_url: https://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/History/amh_eng/p_eng_ea
+    tgt_url: https://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/History/amh_eng/p_amh_ea
+  - name: ethiopian-languages-news
+    src_url: https://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/News/amh_eng/eng_ea.txt
+    tgt_url: https://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/News/amh_eng/amh_ea.txt
+  - name: ethiopian-languages-ebible
+    src_url: https://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/Spritual/e_bible/am_eng/P_eng_ea.txt
+    tgt_url: https://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/Spritual/e_bible/am_eng/P_amh_ea.txt
+  - name: ethiopian-languages-ethio_bible
+    src_url: https://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/Spritual/ethiopic_bible/eng_amh/p_eng_ea.txt
+    tgt_url: https://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/Spritual/ethiopic_bible/eng_amh/p_amh_ea.txt
+  - name: ethiopian-languages-jw_bible
+    src_url: https://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/Spritual/jw_bible/amh_eng/p_eng_ea.txt
+    tgt_url: https://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/Spritual/jw_bible/amh_eng/p_amh_ea.txt
+  - name: ethiopian-languages-jw_daily
+    src_url: https://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/Spritual/jw_daily/amh_eng/p_eng_ea
+    tgt_url: https://raw.githubusercontent.com/AAUThematic4LT/Parallel-Corpora-for-Ethiopian-Languages/refs/heads/master/Exp%20I-English%20to%20Local%20Lang/Spritual/jw_daily/amh_eng/p_amh_ea
+  - name: horn-mt
+    src_url: https://raw.githubusercontent.com/asmelashteka/HornMT/refs/heads/main/data/eng.txt
+    tgt_url: https://raw.githubusercontent.com/asmelashteka/HornMT/refs/heads/main/data/amh.txt
   table:
-    - name: "mt-evaluation-amharic-amen"
-      url: "https://zenodo.org/records/3734260/files/amen.tsv?download=1"
-      src_col: "Reference Translation"
-      tgt_col: "Source Sentence"
-      file_type: "tsv"
-    - name: "mt-evaluation-amharic-enam"
-      url: "https://zenodo.org/records/3734260/files/enam.tsv?download=1"
-      src_col: "Source"
-      tgt_col: "Reference Translation"
-      file_type: "tsv"
-
-
-
+  - name: mt-evaluation-amharic-amen
+    url: https://zenodo.org/records/3734260/files/amen.tsv?download=1
+    src_col: Reference Translation
+    tgt_col: Source Sentence
+    file_type: tsv
+  - name: mt-evaluation-amharic-enam
+    url: https://zenodo.org/records/3734260/files/enam.tsv?download=1
+    src_col: Source
+    tgt_col: Reference Translation
+    file_type: tsv
 download:
-  output_dir: "raw/"
-  dataset_cache: "dataset_cache"
-  model_cache: "model_cache"
-
+  output_dir: raw/
+  dataset_cache: dataset_cache
+  model_cache: model_cache
 preprocessing:
   lowercase: true
   apply_rule_filter: true
   apply_semantic_filter: true
   from_cache: true
-
 filters:
   rule_filter:
     min_length: 3
@@ -205,18 +197,14 @@ filters:
   lang_detect_filter:
     batch_size: 1024
     min_score: 0.9
-
 validation:
   quality_estimation: true
   language_detection: true
-
 output:
-  filtered_prefix: "filtered"
-  save_format: "hf"  # or txt, csv, json
-  save_dir: "preprocess_outputs/"
-
-
+  filtered_prefix: filtered
+  save_format: hf
+  save_dir: preprocess_outputs/
 logging:
   debug: true
-  log_dir: "logs/"
-  log_file: "en-am.log"
+  log_dir: logs/
+  log_file: en-am.log

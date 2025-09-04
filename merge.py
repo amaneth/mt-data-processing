@@ -11,10 +11,10 @@ from pipelines import deduplicate_df
 logger = logging.getLogger("dataset_merger")
 logging.basicConfig(level=logging.INFO)
 
-DATA_DIR = "preprocess_outputs/en-am/include"
+DATA_DIR = "preprocess_outputs/en-zu"
 
 
-def merge_and_deduplicate(data_dir=DATA_DIR, src_col="en", tgt_col="am") -> Dataset:
+def merge_and_deduplicate(data_dir=DATA_DIR, src_col="en", tgt_col="zu") -> Dataset:
     """
     Merge all HF datasets under data_dir and deduplicate using deduplicate_df.
     """
@@ -63,4 +63,4 @@ if __name__ == "__main__":
         tgt_col=args.tgt_col
     )
     merged_dataset.save_to_disk(f"preprocess_outputs/{args.src_col}-{args.tgt_col}/{args.src_col}-{args.tgt_col}-merged")
-    logger.info("Saved merged and deduplicated dataset to preprocess_outputs/en-am-merged")
+    logger.info(f"Saved merged and deduplicated dataset to preprocess_outputs/{args.src_col}-{args.tgt_col}-merged")

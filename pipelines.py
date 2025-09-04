@@ -149,6 +149,11 @@ def semantic_filter(
     return filtered_source, filtered_target
 
     
+from langdetect import detect as detect_lang
+from langdetect import DetectorFactory
+
+DetectorFactory.seed = 0
+
 def lang_detect_filter(
     source_list,
     target_list,
@@ -158,27 +163,135 @@ def lang_detect_filter(
     batch_size=1024,
     min_score=0.9
 ):
-    
+
     assert len(source_list) == len(target_list), "Source and target lists must be of the same length."
     logger.info("Language detection filter started")
     logger.info(f"Total sentence pairs: {len(source_list)} | Batch size: {batch_size} | Min score: {min_score}")
 
-    def detect(lines):
+    # AfroLID model and label mapping for supported African languages
+    afrolid_model = None
+    afrolid_label_map = {
+        'am': 'amh',  # Amharic
+        'so': 'som',  # Somali
+        'sw': 'swh',  # Swahili
+        'af': 'afr',  # Afrikaans
+        'ha': 'hau',  # Hausa
+        'zu': 'zul'   # Zulu
+    }
+
+    african_langs = list(afrolid_label_map.keys())
+
+    # Check if we should use AfroLID for better African language detection
+    use_afrolid_src = srclang in african_langs
+    use_afrolid_tgt = tgtlang in african_langs
+
+    if use_afrolid_src or use_afrolid_tgt:
+        logger.info("Using AfroLID for African language detection.")
+        try:
+            from transformers import pipeline
+            afrolid_model = pipeline("text-classification", model='UBC-NLP/afrolid_1.5')
+            logger.info("✅ AfroLID model loaded successfully")
+        except Exception as e:
+            logger.warning(f"❌ Failed to load AfroLID model: {e}, falling back to default")
+            afrolid_model = None
+
+    if srclang == 'so' or tgtlang == 'so':
+        if afrolid_model and (use_afrolid_src or use_afrolid_tgt):
+            logger.info("Using AfroLID for Somali language detection.")
+            filtered_source = []
+            filtered_target = []
+
+            # Map language codes to AfroLID labels
+            target_src_lang = afrolid_label_map.get(srclang, srclang.lower())
+            target_tgt_lang = afrolid_label_map.get(tgtlang, tgtlang.lower())
+
+            for s, t in tqdm(zip(source_list, target_list), total=len(source_list)):
+                try:
+                    s_result = afrolid_model(s) if s.strip() else None
+                    t_result = afrolid_model(t) if t.strip() else None
+
+                    if s_result:
+                        s_lang = s_result[0]['label'].lower()
+                        s_score = s_result[0]['score']
+                    else:
+                        s_lang, s_score = "", 0
+
+                    if t_result:
+                        t_lang = t_result[0]['label'].lower()
+                        t_score = t_result[0]['score']
+                    else:
+                        t_lang, t_score = "", 0
+
+                    # Check if detected languages match and scores are above threshold
+                    if (s_lang == target_src_lang and t_lang == target_tgt_lang and
+                        s_score >= min_score and t_score >= min_score):
+                        filtered_source.append(s)
+                        filtered_target.append(t)
+                except Exception as e:
+                    logger.debug(f"AfroLID detection error: {e}")
+                    continue
+
+            logger.info(f"Language detection with AfroLID complete → Remaining: {len(filtered_source)} pairs")
+            return filtered_source, filtered_target
+
+        logger.info("Using langdetect for Somali language detection.")
+        filtered_source = []
+        filtered_target = []
+        for s, t in tqdm(zip(source_list, target_list), total=len(source_list)):
+            try:
+                s_lang = detect_lang(s)
+                t_lang = detect_lang(t)
+                if s_lang == srclang and t_lang == tgtlang:
+                    filtered_source.append(s)
+                    filtered_target.append(t)
+            except Exception:
+                continue
+        logger.info(f"Language detection complete → Remaining: {len(filtered_source)} pairs")
+        return filtered_source, filtered_target
+
+    def detect(lines, lang_code=None):
         results, scores = [], []
-        for i in range(0, len(lines), batch_size):
-            batch = lines[i:i+batch_size]
-            predictions = model.predict(batch, k=1)
-            codes = [pred[0].replace("__label__", "") for pred in predictions[0]]
-            scs   = [pred[0] for pred in predictions[1]]
-            results.extend(codes)
-            scores.extend(scs)
+
+        # Use AfroLID if available and language is African
+        if afrolid_model and lang_code in african_langs:
+            logger.info(f"Using AfroLID for detecting {lang_code}")
+            target_lang = afrolid_label_map.get(lang_code, lang_code.lower())
+
+            for text in tqdm(lines, total=len(lines)):
+                try:
+                    if text.strip():
+                        result = afrolid_model(text)
+                        det_lang = result[0]['label'].lower()
+                        det_score = result[0]['score']
+
+                        # Map AfroLID labels back to expected format
+                        reverse_map = {v: k for k, v in afrolid_label_map.items()}
+                        mapped_lang = reverse_map.get(det_lang, det_lang)
+                        results.append(mapped_lang)
+                        scores.append(det_score)
+                    else:
+                        results.append('')
+                        scores.append(0.0)
+                except Exception as e:
+                    logger.debug(f"AfroLID detection error: {e}")
+                    results.append('')
+                    scores.append(0.0)
+        else:
+            # Fall back to FastText
+            for i in range(0, len(lines), batch_size):
+                batch = lines[i:i+batch_size]
+                predictions = model.predict(batch, k=1)
+                codes = [pred[0].replace("__label__", "") for pred in predictions[0]]
+                scs   = [pred[0] for pred in predictions[1]]
+                results.extend(codes)
+                scores.extend(scs)
         return results, scores
 
     source_list = [s.replace("\n", " ") for s in source_list]
     target_list = [t.replace("\n", " ") for t in target_list]
     # Detect languages
-    src_codes, src_scores = detect(source_list)
-    tgt_codes, tgt_scores = detect(target_list)
+    src_codes, src_scores = detect(source_list, srclang)
+    tgt_codes, tgt_scores = detect(target_list, tgtlang)
 
     filtered_source = []
     filtered_target = []

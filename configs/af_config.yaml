@@ -1,105 +1,103 @@
-# Afrikaans (af) config.yaml
-
 dataset:
-  lang_pair: ["en", "af"]
-  selected_sources: ["hf", "opus"]
-
-  hf:
-    - name: "flores"
-      path: "facebook/flores"
-      split: "dev+devtest"
-      config_name: "eng_Latn-afr_Latn"
-      src_col: "sentence_eng_Latn"
-      tgt_col: "sentence_afr_Latn"
-      format: "flat_column"
-
-    - name: "smol"
-      path: "google/smol"
-      split: "train"
-      config_name: "smolsent__en_af"
-      src_col: "src"
-      tgt_col: "trg"
-      format: "flat_column"
-
-    - name: "spc"
-      path: "Helsinki-NLP/spc"
-      split: "train"
-      config_name: "af-en"
-      src_key: "en"
-      tgt_key: "af"
-      column: "translation"
-      format: "nested_translation"
-
-
-    - name: "lingvanex_test_references"
-      path: "lingvanex/lingvanex_test_references"
-      split: "test"
-      config_name: "en-af"
-      src_col: "en"
-      tgt_col: "af"
-      format: "flat_column"
-
-    - name: "Weblate-Translations"
-      path: "ayymen/Weblate-Translations"
-      split: "train"
-      config_name: "en-af"
-      src_col: "source_string"
-      tgt_col: "target_string"
-      format: "flat_column"
-      
-    - name: "ntrex"
-      path: "davidstap/NTREX"
-      split: "test"
-      src_config: "eng_Latn"
-      tgt_config: "afr_Latn"
-      column: "text"
-      format: "dual_config"
-      
-
-    - name: "Pontoon-Translations"
-      path: "ayymen/Pontoon-Translations"
-      split: "train"
-      config_name: "en-af"
-      src_col: "source_string"
-      tgt_col: "target_string"
-      format: "flat_column"
-
+  lang_pair:
+  - en
+  - af
+  selected_sources:
+  - hf
+  - opus
   opus:
-    - name: "wikimedia"
-      url: "https://object.pouta.csc.fi/OPUS-wikimedia/v20230407/moses/af-en.txt.zip"
-    - name: "TED2020"
-      url: "https://object.pouta.csc.fi/OPUS-TED2020/v1/moses/af-en.txt.zip"
-    - name: "bible-uedin"
-      url: "https://object.pouta.csc.fi/OPUS-bible-uedin/v1/moses/af-en.txt.zip"
-    - name: "GNOME"
-      url: "https://object.pouta.csc.fi/OPUS-GNOME/v1/moses/af-en.txt.zip"
-    - name: "Tatoeba"
-      url: "https://object.pouta.csc.fi/OPUS-Tatoeba/v2023-04-12/moses/af-en.txt.zip"
-    - name: "ELRC-3039-wikipedia_health"
-      url: "https://object.pouta.csc.fi/OPUS-ELRC-3039-wikipedia_health/v1/moses/af-en.txt.zip"
-    - name: "ELRC-wikipedia_health"
-      url: "https://object.pouta.csc.fi/OPUS-ELRC-wikipedia_health/v1/moses/af-en.txt.zip"
-    - name: "ELRC_2922"
-      url: "https://object.pouta.csc.fi/OPUS-ELRC_2922/v1/moses/af-en.txt.zip"
+  - name: ELRC-2616-Museus_2007
+    url: https://object.pouta.csc.fi/OPUS-ELRC-2616-Museus_2007/v1/moses/af-en.txt.zip
+  - name: ELRC-2638-monumentos_2007
+    url: https://object.pouta.csc.fi/OPUS-ELRC-2638-monumentos_2007/v1/moses/af-en.txt.zip
+  - name: ELRC-Museus_2007
+    url: https://object.pouta.csc.fi/OPUS-ELRC-Museus_2007/v1/moses/af-en.txt.zip
+  - name: kde4
+    url: https://object.pouta.csc.fi/OPUS-KDE4/v2/moses/af-en.txt.zip
+  - name: spc
+    url: https://object.pouta.csc.fi/OPUS-SPC/v1/moses/af-en.txt.zip
+  - name: qed
+    url: https://object.pouta.csc.fi/OPUS-QED/v2.0a/moses/af-en.txt.zip
+  - name: OpenSubtitles v2024
+    url: https://object.pouta.csc.fi/OPUS-OpenSubtitles/v2024/moses/af-en.txt.zip
+  - name: bible-uedin
+    url: https://object.pouta.csc.fi/OPUS-bible-uedin/v1/moses/af-en.txt.zip
+  - name: GNOME
+    url: https://object.pouta.csc.fi/OPUS-GNOME/v1/moses/af-en.txt.zip
+  - name: TED2020
+    url: https://object.pouta.csc.fi/OPUS-TED2020/v1/moses/af-en.txt.zip
+  - name: Tatoeba
+    url: https://object.pouta.csc.fi/OPUS-Tatoeba/v2023-04-12/moses/af-en.txt.zip
+  - name: wikimedia
+    url: https://object.pouta.csc.fi/OPUS-wikimedia/v20230407/moses/af-en.txt.zip
+  - name: ELRC-3039-wikipedia_health
+    url: https://object.pouta.csc.fi/OPUS-ELRC-3039-wikipedia_health/v1/moses/af-en.txt.zip
+  - name: ELRC-wikipedia_health
+    url: https://object.pouta.csc.fi/OPUS-ELRC-wikipedia_health/v1/moses/af-en.txt.zip
+  - name: ELRC_2922
+    url: https://object.pouta.csc.fi/OPUS-ELRC_2922/v1/moses/af-en.txt.zip
+  hf:
+  - name: smol
+    path: google/smol
+    split: train
+    config_name: smolsent__en_af
+    src_col: src
+    tgt_col: trg
+    format: flat_column
+  - name: spc
+    path: Helsinki-NLP/spc
+    split: train
+    config_name: af-en
+    src_key: en
+    tgt_key: af
+    column: translation
+    format: nested_translation
+  - name: lingvanex_test_references
+    path: lingvanex/lingvanex_test_references
+    split: test
+    config_name: en-af
+    src_col: en
+    tgt_col: af
+    format: flat_column
+  - name: Weblate-Translations
+    path: ayymen/Weblate-Translations
+    split: train
+    config_name: en-af
+    src_col: source_string
+    tgt_col: target_string
+    format: flat_column
+  - name: ntrex
+    path: davidstap/NTREX
+    split: test
+    src_config: eng_Latn
+    tgt_config: afr_Latn
+    column: text
+    format: dual_config
+  - name: Pontoon-Translations
+    path: ayymen/Pontoon-Translations
+    split: train
+    config_name: en-af
+    src_col: source_string
+    tgt_col: target_string
+    format: flat_column
 
-  url:
-    # Add any URL-based datasets if available
-
-  table:
-    # Add any table-based datasets if available
-
+  - name: ted_talks_iwslt
+    path: IWSLT/ted_talks_iwslt
+    split: train
+    column: translation
+    src_key: en
+    tgt_key: af
+    format: nested_translation
 
 download:
-  output_dir: "raw/"
-  dataset_cache: "dataset_cache"
-  model_cache: "model_cache"
-
+  output_dir: raw/
+  dataset_cache: dataset_cache
+  model_cache: model_cache
 preprocessing:
   lowercase: true
   apply_rule_filter: true
   apply_semantic_filter: true
-  from_cache: true
-
+  from_cache: false
 filters:
   rule_filter:
     min_length: 3
@@ -111,18 +109,14 @@ filters:
   lang_detect_filter:
     batch_size: 1024
     min_score: 0.9
-
 validation:
   quality_estimation: true
-  language_detection: false
-
+  language_detection: true
 output:
-  filtered_prefix: "filtered"
-  save_format: "hf"  # or txt, csv, json
-  save_dir: "preprocess_outputs/"
-
-
+  filtered_prefix: filtered
+  save_format: hf
+  save_dir: preprocess_outputs/
 logging:
   debug: true
-  log_dir: "logs/"
-  log_file: "en-af.log"
+  log_dir: logs/
+  log_file: en-af.log

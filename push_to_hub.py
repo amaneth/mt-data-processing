@@ -1,5 +1,3 @@
-# save this as push_hf_dataset.py
-
 from datasets import load_from_disk, DatasetDict
 from huggingface_hub import HfApi
 import os

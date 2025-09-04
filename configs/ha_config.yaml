@@ -1,0 +1,210 @@
+dataset:
+  lang_pair:
+  - en
+  - ha
+  selected_sources:
+  - opus
+  - hf
+  - url
+  opus:
+  - name: wikimedia
+    url: https://object.pouta.csc.fi/OPUS-wikimedia/v20230407/moses/en-ha.txt.zip
+  - name: Tanzil
+    url: https://object.pouta.csc.fi/OPUS-Tanzil/v1/moses/en-ha.txt.zip
+  - name: GNOME
+    url: https://object.pouta.csc.fi/OPUS-GNOME/v1/moses/en-ha.txt.zip
+  - name: tico-19
+    url: https://object.pouta.csc.fi/OPUS-tico-19/v2020-10-28/moses/en-ha.txt.zip
+  - name: TED2020
+    url: https://object.pouta.csc.fi/OPUS-TED2020/v1/moses/en-ha.txt.zip
+  - name: KDE4
+    url: https://object.pouta.csc.fi/OPUS-KDE4/v2/moses/en-ha.txt.zip
+  - name: Tatoeba
+    url: https://object.pouta.csc.fi/OPUS-Tatoeba/v2023-04-12/moses/en-ha.txt.zip
+    
+  hf:
+  - name: flores
+    path: facebook/flores
+    split: dev
+    config_name: eng_Latn-hau_Latn
+    src_col: sentence_eng_Latn
+    tgt_col: sentence_hau_Latn
+    format: flat_column
+  - name: smol
+    path: google/smol
+    split: train
+    config_name: smolsent__en_ha
+    src_col: src
+    tgt_col: trg
+    format: flat_column
+  - name: mafand
+    path: masakhane/mafand
+    split: train
+    config_name: en-hau
+    column: translation
+    src_key: en
+    tgt_key: hau
+    format: nested_translation
+  - name: mafand-dev
+    path: masakhane/mafand
+    split: validation
+    config_name: en-hau
+    column: translation
+    src_key: en
+    tgt_key: hau
+    format: nested_translation
+  - name: mafand-test
+    path: masakhane/mafand
+    split: test
+    config_name: en-hau
+    column: translation
+    src_key: en
+    tgt_key: hau
+    format: nested_translation
+  - name: Pontoon-Translations
+    path: ayymen/Pontoon-Translations
+    split: train
+    config_name: en-ha
+    src_col: source_string
+    tgt_col: target_string
+    format: flat_column
+  - name: Weblate-Translations
+    path: ayymen/Weblate-Translations
+    split: train
+    config_name: en-ha
+    src_col: source_string
+    tgt_col: target_string
+    format: flat_column
+  - name: ntrex
+    path: davidstap/NTREX
+    split: test
+    src_config: eng_Latn
+    tgt_config: hau_Latn
+    column: text
+    format: dual_config
+  - name: HausaVG
+    path: HausaNLP/HausaVG
+    split: train
+    src_col: en_text
+    tgt_col: ha_text
+    format: flat_column
+  - name: polynews-parallel
+    path: aiana94/polynews-parallel
+    split: train
+    config_name: eng_Latn-hau_Latn
+    src_col: src
+    tgt_col: tgt
+    format: flat_column
+  - name: quran_multilingual_parallel
+    path: freococo/quran_multilingual_parallel
+    split: train
+    config_name: default
+    src_col: english
+    tgt_col: hausa
+    format: flat_column
+  - name: AfriDocMT-tech
+    path: masakhane/AfriDocMT
+    split: train
+    config_name: tech
+    src_col: en
+    tgt_col: ha
+    format: flat_column
+  - name: AfriDocMT-health
+    path: masakhane/AfriDocMT
+    split: train
+    config_name: health
+    src_col: en
+    tgt_col: ha
+    format: flat_column
+  - name: quran
+    path: nazimali/quran
+    split: train
+    src_col: translation-en-itani
+    tgt_col: translation-ha-gumi
+    format: flat_column
+  - name: ted_talks_iwslt
+    path: IWSLT/ted_talks_iwslt
+    split: train
+    column: translation
+    src_key: en
+    tgt_key: ha
+    format: nested_translation
+  - name: seamless-align
+    path: jhu-clsp/seamless-align
+    split: train
+    config_name: en-ha
+    src_col: src
+    tgt_col: tgt
+    format: flat_column
+  - name: udhr
+    path: community-datasets/udhr
+    split: train
+    src_col: en
+    tgt_col: ha
+    format: flat_column
+  - name: subscene
+    path: refine-ai/subscene
+    split: train
+    config_name: hausa
+    src_col: src
+    tgt_col: tgt
+    format: flat_column
+    trust_remote_code: true
+  - name: kenyan-low-resource-language-data
+    path: thinkKenya/kenyan-low-resource-language-data
+    split: train
+    src_col: english_text
+    tgt_col: hausa_text
+    format: flat_column
+  - name: salt
+    path: Sunbird/salt
+    split: train
+    src_col: en
+    tgt_col: ha
+    format: flat_column
+  - name: ParaBLoCC
+    path: pviechn1/ParaBLoCC
+    split: train
+    src_col: en
+    tgt_col: ha
+    format: flat_column
+  - name: Gamayun-kits
+    path: CLEAR-Global/Gamayun-kits
+    split: train
+    config_name: en-hau
+    src_col: src
+    tgt_col: tgt
+    format: flat_column
+
+download:
+  output_dir: raw/
+  dataset_cache: dataset_cache
+  model_cache: model_cache
+preprocessing:
+  lowercase: true
+  apply_rule_filter: true
+  apply_semantic_filter: true
+  apply_lang_detect_filter: true
+  from_cache: true
+filters:
+  rule_filter:
+    min_length: 3
+    max_length: 200
+    max_length_ratio: 2.0
+  semantic_filter:
+    threshold: 0.7
+    chunk_size: 1000
+  lang_detect_filter:
+    batch_size: 1000
+    min_score: 0.5
+validation:
+  quality_estimation: true
+  language_detection: true
+output:
+  filtered_prefix: filtered
+  save_format: hf
+  save_dir: preprocess_outputs
+logging:
+  debug: true
+  log_dir: logs/
+  log_file: en-ha.log

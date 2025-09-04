@@ -137,7 +137,7 @@ def apply_lang_detect_filter_if_enabled(source_list, target_list, srclang, tgtla
             tgtlang=tgtlang,
             model=fasttext_model,
             batch_size=lang_cfg.get("batch_size", 1024),
-            min_score=lang_cfg.get("min_score", 0.9)
+            min_score=lang_cfg.get("min_score", 0.7)
         )
         logger.info(f"✅ Language detection output: {len(source_list)} sentence pairs")
     return source_list, target_list
@@ -280,6 +280,7 @@ def log_final_summary(summary_log, logger):
     ]
     summary_table.append(["TOTAL", "-", total_original, total_after_rule, total_after_semantic, total_after_lang_detect, "-"])
     logger.info("\n📊 Final Dataset Summary:\n" + tabulate(summary_table, headers=["Source", "Dataset", "Original", "After Rule", "After Semantic", "After Lang Detect", "Translation Quality"], tablefmt="github"))
+    logger.info(f"📈 Total number of datasets processed: {len(summary_log)}")
 
 def main(config_path):
     config = load_config(config_path)
@@ -288,10 +289,13 @@ def main(config_path):
     sentence_model, model_pool, comet_model, fasttext_model = load_models(config)
     summary_log = []
     datasets = collect_datasets(config)
+    cumulative_lang_detect = 0
     for ds_cfg in tqdm(datasets, desc="\033[1;34mProcessing datasets\033[0m"):
         summary = process_dataset(ds_cfg, config, logger, sentence_model, model_pool, comet_model, fasttext_model)
         if summary:
             summary_log.append(summary)
+            cumulative_lang_detect += summary["after_lang_detect"]
+            logger.info(f"📊 Cumulative Lang Detect Pairs: {cumulative_lang_detect}")
     sentence_model.stop_multi_process_pool(model_pool)
     log_final_summary(summary_log, logger)
 
@@ -302,7 +306,7 @@ def main(config_path):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run preprocessing pipeline")
     parser.add_argument(
-        "--conf`ig",
+        "--config",
         type=str,
         required=True,
         help="Path to the config YAML file(required)"

@@ -19,3 +19,12 @@ pyarrow==20.0.0
 lxml==6.0.0
 unbabel-comet==2.2.6
 sacrebleu==2.5.1
+requests
+pyfranc
+polyglot
+lingua-language-detector
+PyICU
+
+wget==3.2
+tabulate==0.9.0
+pyyaml==6.0.2
