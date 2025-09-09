@@ -3,18 +3,20 @@ from datasets import load_dataset
 from fetch import download_url, download_opus, download_table
 
 def load_flat_column_dataset(cfg, dataset_cache=None):
+    extra_args = cfg.get("extra_args", {})
+    if dataset_cache:
+        extra_args["cache_dir"] = dataset_cache
     
     if "config_name" in cfg:
-        dataset = load_dataset(cfg["path"], cfg["config_name"], split=cfg["split"], cache_dir=dataset_cache)
+        dataset = load_dataset(cfg["path"], cfg["config_name"], split=cfg["split"], **extra_args)
     else:
-        dataset = load_dataset(cfg["path"], split=cfg["split"], cache_dir=dataset_cache)
+        dataset = load_dataset(cfg["path"], split=cfg["split"], **extra_args)
+
     source_list = [item[cfg["src_col"]] for item in dataset]
     target_list = [item[cfg["tgt_col"]] for item in dataset]
+    return source_list, target_list
 
     
-    # dataset = load_dataset(cfg["path"], split=cfg["split"], cache_dir=dataset_cache)
-    # return [(ex[cfg["src_col"]], ex[cfg["tgt_col"]]) for ex in dataset]
-    return source_list, target_list
 def load_dual_config_dataset(cfg, dataset_cache=None):
     
     source_list = load_dataset(cfg["path"], cfg["src_config"], split=cfg["split"], cache_dir=dataset_cache)[cfg["column"]]
@@ -23,16 +25,13 @@ def load_dual_config_dataset(cfg, dataset_cache=None):
     return source_list, target_list
 
 def load_nested_translation_dataset(cfg, dataset_cache=None):
-    dataset = load_dataset(cfg["path"], cfg["config_name"], split=cfg["split"], cache_dir=dataset_cache)
-    source_list, target_list = [], []
+    extra_args = cfg.get("extra_args", {})
+    if dataset_cache:
+        extra_args["cache_dir"] = dataset_cache
 
-    for trans in dataset[cfg["column"]]:
-        source_list.append(trans[cfg["src_key"]])
-        target_list.append(trans[cfg["tgt_key"]])
-
+    dataset = load_dataset(cfg["path"], cfg.get("config_name"), split=cfg["split"], **extra_args)
     source_list = [trans[cfg["src_key"]] for trans in dataset[cfg["column"]]]
     target_list = [trans[cfg["tgt_key"]] for trans in dataset[cfg["column"]]]
-    
     return source_list, target_list
 
 
