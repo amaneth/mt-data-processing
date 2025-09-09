@@ -2,7 +2,7 @@
 
 dataset:
   lang_pair: ["en", "am"]
-  selected_sources: ["hf", "opus", "url", "table"] 
+  selected_sources: ["hf", "url", "opus", "table"] 
 
   hf:
     - name: "smol"
@@ -23,7 +23,7 @@ dataset:
     - name: "Pontoon-Translations"
       path: "ayymen/Pontoon-Translations"
       split: "train"
-      config_name: "en-am"
+      config_name: "en-sw"
       src_col: "source_string"
       tgt_col: "target_string"
       format: "flat_column"
@@ -39,6 +39,12 @@ dataset:
       split: "train"
       src_col: "translation-en-itani"
       tgt_col: "translation-am-sadiq"
+      format: "flat_column"
+    - name: "English-Swahili-Sentence-Pairs"
+      path: "Rogendo/English-Swahili-Sentence-Pairs"
+      split: "train"
+      src_col: "English sentence"
+      tgt_col: "Swahili Translation"
       format: "flat_column"
     - name: "ntrex"
       path: "davidstap/NTREX"
@@ -192,7 +198,7 @@ preprocessing:
   lowercase: true
   apply_rule_filter: true
   apply_semantic_filter: true
-  from_cache: true
+  from_cache: false
 
 filters:
   rule_filter:
@@ -203,9 +209,16 @@ filters:
     threshold: 0.7
     chunk_size: 1024
   lang_detect_filter:
-    batch_size: 1024
-    min_score: 0.9
-
+    source:
+      model: "fasttext"
+      lang_code: "en"
+      batch_size: 1024
+      min_score: 0.7      
+    target:   
+      model: "fasttext"
+      lang_code: "am"
+      batch_size: 1024
+      min_score: 0.7
 validation:
   quality_estimation: true
 

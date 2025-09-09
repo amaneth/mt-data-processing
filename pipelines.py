@@ -1,6 +1,7 @@
 
 # Function to split source lines into chunks to avoid out-of-memory errors
 from sentence_transformers import SentenceTransformer
+from transformers.pipelines.base import Pipeline as HFPipeline
 from sentence_transformers.util import pytorch_cos_sim
 import torch
 from tqdm import tqdm
@@ -148,49 +149,71 @@ def semantic_filter(
     logger.info(f"Semantic filtering complete → Remaining: {len(filtered_source)} pairs")
     return filtered_source, filtered_target
 
-    
-def lang_detect_filter(
-    source_list,
-    target_list,
-    srclang,
-    tgtlang,
-    model,
-    batch_size=1024,
-    min_score=0.9
-):
-    
+
+
+def detect_fasttext(model, lines, batch_size=32):
+    results, scores = [], []
+    for i in range(0, len(lines), batch_size):
+        batch = lines[i:i+batch_size]
+        labels, probs = model.predict(batch, k=1)
+        codes = [lbl[0].replace("__label__", "") for lbl in labels]
+        scs   = [p[0] for p in probs]
+        results.extend(codes)
+        scores.extend(scs)
+    return results, scores
+
+
+def detect_afrolid(model, lines):
+    predictions = model(lines)  # pipeline handles batching internally
+    codes = [pred["label"] for pred in predictions]
+    scs   = [pred["score"] for pred in predictions]
+    return codes, scs
+
+
+def lang_detect_filter(source_list, target_list, src_detect_model, tgt_detect_model, lang_cfg):
+
     assert len(source_list) == len(target_list), "Source and target lists must be of the same length."
-    logger.info("Language detection filter started")
-    logger.info(f"Total sentence pairs: {len(source_list)} | Batch size: {batch_size} | Min score: {min_score}")
+    logger.info("Language filter started")
+    logger.info(f"Total sentence pairs: {len(source_list)}")
 
-    def detect(lines):
-        results, scores = [], []
-        for i in range(0, len(lines), batch_size):
-            batch = lines[i:i+batch_size]
-            predictions = model.predict(batch, k=1)
-            codes = [pred[0].replace("__label__", "") for pred in predictions[0]]
-            scs   = [pred[0] for pred in predictions[1]]
-            results.extend(codes)
-            scores.extend(scs)
-        return results, scores
-
+    # Clean inputs
     source_list = [s.replace("\n", " ") for s in source_list]
     target_list = [t.replace("\n", " ") for t in target_list]
-    # Detect languages
-    src_codes, src_scores = detect(source_list)
-    tgt_codes, tgt_scores = detect(target_list)
 
-    filtered_source = []
-    filtered_target = []
+    # --- Source detection ---
+    src_cfg = lang_cfg["source"]
+    if src_cfg["model"] == "fasttext":
+        src_codes, src_scores = detect_fasttext(src_detect_model, source_list, src_cfg.get("batch_size", 32))
+    else:
+        src_codes, src_scores = detect_afrolid(src_detect_model, source_list)
 
-    for s, t, sl, tl, ss, ts in zip(source_list, target_list, src_codes, tgt_codes, src_scores, tgt_scores):
-        if sl == srclang and tl == tgtlang and ss >= min_score and ts >= min_score:
+    # --- Target detection ---
+    tgt_cfg = lang_cfg["target"]
+    if tgt_cfg["model"] == "fasttext":
+        tgt_codes, tgt_scores = detect_fasttext(tgt_detect_model, target_list, tgt_cfg.get("batch_size", 32))
+    else:
+        tgt_codes, tgt_scores = detect_afrolid(tgt_detect_model, target_list)
+
+    # Debug sample
+    print("SRC:", src_codes[:5], src_scores[:5])
+    print("TGT:", tgt_codes[:5], tgt_scores[:5])
+
+    # --- Filtering ---
+    filtered_source, filtered_target = [], []
+
+    for s, t, sl, tl, ss, ts in zip(
+        source_list, target_list, src_codes, tgt_codes, src_scores, tgt_scores
+    ):
+        if (sl == src_cfg["lang_code"] and tl == tgt_cfg["lang_code"]
+            and ss >= src_cfg["min_score"] and ts >= tgt_cfg["min_score"]):
             filtered_source.append(s)
             filtered_target.append(t)
 
+        
+
+
     logger.info(f"Language detection complete → Remaining: {len(filtered_source)} pairs")
     return filtered_source, filtered_target
-
 
 if __name__=="__main__":
     from datasets import load_dataset

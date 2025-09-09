@@ -16,4 +16,4 @@ def opus_info(srclang, tgtlang):
         print(f"📦 Size   : {entry.get('size', 'N/A')} KB")
         print(f"📝 URL    : {entry['url']}\n")
 
-    return corporaen
+    return corpora

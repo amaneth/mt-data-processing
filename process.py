@@ -3,7 +3,7 @@ import yaml
 from tabulate import tabulate
 from datasets import Dataset
 from dataset_loader import load_dataset_standard
-from model_loader import load_sentence_transformer, get_comet_model, get_fasttext_model
+from model_loader import load_sentence_transformer, get_comet_model, get_fasttext_model, get_afrolid_model
 
 from pipelines import rule_filter, semantic_filter, lang_detect_filter
 from validators import quality_estimation
@@ -78,11 +78,24 @@ def setup_logger(config):
 
 def load_models(config):
     srclang, tgtlang = config["dataset"]["lang_pair"]
+    src_lang_model = config["filters"]["lang_detect_filter"]["source"].get("model", "fasttext")
+    tgt_lang_model = config["filters"]["lang_detect_filter"]["target"].get("model", "afrolid")
     sentence_model = load_sentence_transformer(srclang, tgtlang)
     model_pool = sentence_model.start_multi_process_pool()
     comet_model = get_comet_model(model_name="masakhane/africomet-qe-stl")
-    fasttext_model = get_fasttext_model(model_name="lid.176.bin")
-    return sentence_model, model_pool, comet_model, fasttext_model
+
+    if src_lang_model == "afrolid":
+        src_detect_model = get_afrolid_model(model_name="UBC-NLP/afrolid_1.5")
+    else:    
+        src_detect_model = get_fasttext_model(model_name="lid.176.bin")    
+
+    if tgt_lang_model == "afrolid":
+        tgt_detect_model = get_afrolid_model(model_name="UBC-NLP/afrolid_1.5")
+    else:    
+        tgt_detect_model = get_fasttext_model(model_name="lid.176.bin")
+    
+
+    return sentence_model, model_pool, comet_model, src_detect_model, tgt_detect_model
 
 def collect_datasets(config):
     selected_sources = config["dataset"]["selected_sources"]
@@ -126,18 +139,16 @@ def apply_semantic_filter_if_enabled(source_list, target_list, config, srclang, 
         logger.info(f"✅ Semantic filter output: {len(source_list)} sentence pairs")
     return source_list, target_list
 
-def apply_lang_detect_filter_if_enabled(source_list, target_list, srclang, tgtlang, fasttext_model, config, logger):
+def apply_lang_detect_filter_if_enabled(source_list, target_list, src_detect_model, tgt_detect_model, config, logger):
     if config["preprocessing"].get("apply_lang_detect_filter", True):
         lang_cfg = config["filters"]["lang_detect_filter"]
         logger.info("🌐 Applying language detection filter...")
         source_list, target_list = lang_detect_filter(
             source_list,
             target_list,
-            srclang=srclang,
-            tgtlang=tgtlang,
-            model=fasttext_model,
-            batch_size=lang_cfg.get("batch_size", 1024),
-            min_score=lang_cfg.get("min_score", 0.9)
+            src_detect_model,
+            tgt_detect_model,
+            lang_cfg
         )
         logger.info(f"✅ Language detection output: {len(source_list)} sentence pairs")
     return source_list, target_list
@@ -179,7 +190,7 @@ def save_dataset(source_list, target_list, srclang, tgtlang, ds_cfg, config, fil
     else:
         raise ValueError(f"❌ Unknown output format: {save_format}")
 
-def process_dataset(ds_cfg, config, logger, sentence_model, model_pool, comet_model, fasttext_model):
+def process_dataset(ds_cfg, config, logger, sentence_model, model_pool, comet_model, src_detect_model, tgt_detect_model):
     source = ds_cfg["source"]
     srclang, tgtlang = config["dataset"]["lang_pair"]
     output_prefix = config["output"].get("filtered_prefix", "filtered")
@@ -243,7 +254,7 @@ def process_dataset(ds_cfg, config, logger, sentence_model, model_pool, comet_mo
         else:
             # Apply lang detect filter
             source_list, target_list = apply_lang_detect_filter_if_enabled(
-                source_list, target_list, srclang, tgtlang, fasttext_model, config, logger
+                source_list, target_list, src_detect_model, tgt_detect_model, config, logger
             )
             after_lang_detect_len = len(source_list)
             if after_lang_detect_len == 0:
@@ -285,11 +296,11 @@ def main(config_path):
     config = load_config(config_path)
     logger = setup_logger(config)
     logger.info("🚀 Starting preprocessing pipeline")
-    sentence_model, model_pool, comet_model, fasttext_model = load_models(config)
+    sentence_model, model_pool, comet_model, src_detect_model, tgt_detect_model = load_models(config)
     summary_log = []
     datasets = collect_datasets(config)
     for ds_cfg in tqdm(datasets, desc="\033[1;34mProcessing datasets\033[0m"):
-        summary = process_dataset(ds_cfg, config, logger, sentence_model, model_pool, comet_model, fasttext_model)
+        summary = process_dataset(ds_cfg, config, logger, sentence_model, model_pool, comet_model, src_detect_model, tgt_detect_model)
         if summary:
             summary_log.append(summary)
     sentence_model.stop_multi_process_pool(model_pool)
@@ -302,7 +313,7 @@ def main(config_path):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run preprocessing pipeline")
     parser.add_argument(
-        "--conf`ig",
+        "--config",
         type=str,
         required=True,
         help="Path to the config YAML file(required)"

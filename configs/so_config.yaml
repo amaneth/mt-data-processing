@@ -1,6 +1,6 @@
 dataset:
   lang_pair: ["en", "so"]
-  selected_sources: ["hf", "url"]
+  selected_sources: ["opus"]
 
   hf:
     - name: "flores"
@@ -82,24 +82,25 @@ dataset:
       format: "flat_column"
 
   opus:
-    # - name: "wikimedia"
-    #   url: "https://object.pouta.csc.fi/OPUS-wikimedia/v20230407/moses/so-en.txt.zip"
-    # - name: "TED2020"
-    #   url: "https://object.pouta.csc.fi/OPUS-TED2020/v1/moses/so-en.txt.zip"
-    # - name: "bible-uedin"
-    #   url: "https://object.pouta.csc.fi/OPUS-bible-uedin/v1/moses/so-en.txt.zip"
-    # - name: "GNOME"
-    #   url: "https://object.pouta.csc.fi/OPUS-GNOME/v1/moses/so-en.txt.zip"
-    # - name: "OpenSubtitles"
-    #   url: "https://object.pouta.csc.fi/OPUS-OpenSubtitles/v2024/moses/so-en.txt.zip"
-    # - name: "Tatoeba"
-    #   url: "https://object.pouta.csc.fi/OPUS-Tatoeba/v2023-04-12/moses/so-en.txt.zip"
-    # - name: "Tanzil"
-    #   url: "https://object.pouta.csc.fi/OPUS-Tanzil/v1/moses/so-en.txt.zip"
-    # - name: "infopankki"
-    #   url: "https://object.pouta.csc.fi/OPUS-infopankki/v1/moses/so-en.txt.zip"
-    # - name: "tico-19"
-    #   url: "https://object.pouta.csc.fi/OPUS-tico-19/v1/moses/so-en.txt.zip"
+    - name: "wikimedia"
+      url: "https://object.pouta.csc.fi/OPUS-wikimedia/v20230407/moses/en-so.txt.zip"
+      
+    - name: "TED2020"
+      url: "https://object.pouta.csc.fi/OPUS-TED2020/v1/moses/en-so.txt.zip"
+    - name: "bible-uedin"
+      url: "https://object.pouta.csc.fi/OPUS-bible-uedin/v1/moses/en-so.txt.zip"
+    - name: "GNOME"
+      url: "https://object.pouta.csc.fi/OPUS-GNOME/v1/moses/en-so.txt.zip"
+    - name: "OpenSubtitles"
+      url: "https://object.pouta.csc.fi/OPUS-OpenSubtitles/v2024/moses/en-so.txt.zip"
+    - name: "Tatoeba"
+      url: "https://object.pouta.csc.fi/OPUS-Tatoeba/v2023-04-12/moses/en-so.txt.zip"
+    - name: "Tanzil"
+      url: "https://object.pouta.csc.fi/OPUS-Tanzil/v1/moses/en-so.txt.zip"
+    - name: "infopankki"
+      url: "https://object.pouta.csc.fi/OPUS-infopankki/v1/moses/en-so.txt.zip"
+    - name: "tico-19"
+      url: "https://object.pouta.csc.fi/OPUS-tico-19/v1/moses/en-so.txt.zip"
 
   url:
     - name: "horn-mt"
