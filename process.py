@@ -5,7 +5,7 @@ from datasets import Dataset
 from dataset_loader import load_dataset_standard
 from model_loader import load_sentence_transformer, get_comet_model, get_fasttext_model, get_afrolid_model
 
-from pipelines import rule_filter, semantic_filter, lang_detect_filter
+from pipelines import rule_filter, semantic_filter, lang_detect_filter, quality_estimation_filter
 from validators import quality_estimation
 from merge import merge_and_deduplicate_filtered
 
@@ -154,6 +154,20 @@ def apply_lang_detect_filter_if_enabled(source_list, target_list, src_detect_mod
         logger.info(f"✅ Language detection output: {len(source_list)} sentence pairs")
     return source_list, target_list
 
+def apply_quality_estimation_filter_if_enabled(source_list, target_list, config, logger, comet_model):
+    if config["preprocessing"].get("apply_quality_estimation_filter", False):
+        qe_cfg = config["filters"]["quality_estimation_filter"]
+        logger.info("🧪 Applying quality estimation filter...")
+        source_list, target_list = quality_estimation_filter(
+            source_list,
+            target_list,
+            comet_model,
+            threshold=qe_cfg.get("threshold", 0.7),
+            batch_size=qe_cfg.get("batch_size", 32)
+        )
+        logger.info(f"✅ Quality estimation filter output: {len(source_list)} sentence pairs")
+    return source_list, target_list
+
 def run_validation(source_list, target_list, config, comet_model):
     quality_score = None
     if config["validation"].get("quality_estimation", True):
@@ -243,6 +257,7 @@ def process_dataset(ds_cfg, config, logger, sentence_model, model_pool, comet_mo
         logger.warning("⚠️ All segments removed after rule filter. Skipping further filtering.")
         after_semantic_len = 0
         after_lang_detect_len = 0
+        after_qe_len = 0
     else:
         # Apply semantic filter
         source_list, target_list = apply_semantic_filter_if_enabled(
@@ -252,6 +267,7 @@ def process_dataset(ds_cfg, config, logger, sentence_model, model_pool, comet_mo
         if after_semantic_len == 0:
             logger.warning("⚠️ All segments removed after semantic filter. Skipping further filtering.")
             after_lang_detect_len = 0
+            after_qe_len = 0
         else:
             # Apply lang detect filter
             source_list, target_list = apply_lang_detect_filter_if_enabled(
@@ -259,7 +275,14 @@ def process_dataset(ds_cfg, config, logger, sentence_model, model_pool, comet_mo
             )
             after_lang_detect_len = len(source_list)
             if after_lang_detect_len == 0:
+                after_qe_len = 0
                 logger.warning("⚠️ All segments removed after language detection filter.")
+            else:
+                # Apply quality estimation filter
+                source_list, target_list = apply_quality_estimation_filter_if_enabled(
+                    source_list, target_list, config, logger, comet_model
+                )
+                after_qe_len = len(source_list)  
 
     # Only run validation if something remains
     if len(source_list) > 0:
@@ -278,6 +301,7 @@ def process_dataset(ds_cfg, config, logger, sentence_model, model_pool, comet_mo
         "after_rule": after_rule_len,
         "after_semantic": after_semantic_len,
         "after_lang_detect": after_lang_detect_len,
+        "after_qe": after_qe_len,
         "translation_quality": quality_score
     }
 
@@ -308,9 +332,16 @@ def main(config_path):
     log_final_summary(summary_log, logger)
 
     if config.get("merge", {}).get("enabled", False):
-        qe_min_score = config.get("merge", {}).get("qe_min_score", 0.7)
+        merge_cfg = config.get("merge", {})
+        qe_min_score = merge_cfg.get("qe_min_score", None) if merge_cfg.get("filter_by_qe", False) else None
         data_dir = config["output"].get("save_dir", os.path.join(config["download"]["output_dir"], "filtered_dataset"))
-        merge_and_deduplicate_filtered(data_dir, qe_min_score, config, logger, src_col=config["dataset"]["lang_pair"][0], tgt_col=config["dataset"]["lang_pair"][1])    
+        merge_and_deduplicate_filtered(
+            data_dir,
+            qe_min_score,
+            logger,
+            src_col=config["dataset"]["lang_pair"][0],
+            tgt_col=config["dataset"]["lang_pair"][1]
+        )
 
 
 

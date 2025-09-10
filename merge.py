@@ -75,19 +75,29 @@ def merge_and_deduplicate_filtered(data_dir, qe_min_score, config, logger, src_c
                 with open(meta_path, "r", encoding="utf-8") as f:
                     meta = json.load(f)
                 quality = meta.get("quality_score")
-                if quality is not None and quality >= qe_min_score:
+                if qe_min_score is not None:
+                    if quality is not None and quality >= qe_min_score:
+                        ds = load_from_disk(root)
+                        logger.info(f"✅ Including {meta['dataset_name']} → {len(ds)} rows (QE={quality:.2f})")
+                        datasets.append(ds)
+                        included_datasets.append({
+                            "dataset_name": meta["dataset_name"],
+                            "rows": len(ds),
+                            "quality_score": quality
+                        })
+                    else:
+                        logger.info(f"⏭ Skipping {meta.get('dataset_name')} (QE={quality})")
+                        excluded_datasets.append({
+                            "dataset_name": meta.get("dataset_name"),
+                            "quality_score": quality
+                        })
+                else:
                     ds = load_from_disk(root)
-                    logger.info(f"✅ Including {meta['dataset_name']} → {len(ds)} rows (QE={quality:.2f})")
+                    logger.info(f"✅ Including {meta['dataset_name']} → {len(ds)} rows (QE={quality})")
                     datasets.append(ds)
                     included_datasets.append({
                         "dataset_name": meta["dataset_name"],
                         "rows": len(ds),
-                        "quality_score": quality
-                    })
-                else:
-                    logger.info(f"⏭ Skipping {meta['dataset_name']} (QE={quality})")
-                    excluded_datasets.append({
-                        "dataset_name": meta.get("dataset_name"),
                         "quality_score": quality
                     })
             except Exception as e:
@@ -148,7 +158,7 @@ if __name__ == "__main__":
     parser.add_argument("--src_col", type=str, default="en", help="Source lallnguage column name")
     parser.add_argument("--tgt_col", type=str, required=True, help="Target language column name")
     args = parser.parse_args()
-    merged_dataset = merge_and_deduplicate(
+    merged_dataset = merge_and_deduplicate_filtered(
         data_dir=args.data_dir,
         src_col=args.src_col,
         tgt_col=args.tgt_col

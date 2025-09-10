@@ -186,6 +186,8 @@ preprocessing:
   lowercase: true
   apply_rule_filter: true
   apply_semantic_filter: true
+  apply_lang_detect_filter: true
+  apply_quality_estimation_filter: true
   from_cache: true
 
 filters:
@@ -207,13 +209,18 @@ filters:
       lang_code: "am"
       batch_size: 1024
       min_score: 0.7
+  quality_estimation_filter:
+    model: "comet"
+    batch_size: 32
+    min_score: 0.7
 
 validation:
   quality_estimation: true
 
 merge:
-  enabled: true
+  enabled: false
   qe_min_score: 0.7
+  filter_by_qe: false
 
 output:
   filtered_prefix: "filtered"

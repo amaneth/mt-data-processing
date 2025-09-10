@@ -195,8 +195,8 @@ def lang_detect_filter(source_list, target_list, src_detect_model, tgt_detect_mo
         tgt_codes, tgt_scores = detect_afrolid(tgt_detect_model, target_list)
 
     # Debug sample
-    print("SRC:", src_codes[:5], src_scores[:5])
-    print("TGT:", tgt_codes[:5], tgt_scores[:5])
+    # print("SRC:", src_codes[:5], src_scores[:5])
+    # print("TGT:", tgt_codes[:5], tgt_scores[:5])
 
     # --- Filtering ---
     filtered_source, filtered_target = [], []
@@ -213,6 +213,27 @@ def lang_detect_filter(source_list, target_list, src_detect_model, tgt_detect_mo
 
 
     logger.info(f"Language detection complete → Remaining: {len(filtered_source)} pairs")
+    return filtered_source, filtered_target
+
+
+def quality_estimation_filter(source_list, target_list, comet_model, threshold=0.7, batch_size=32):
+    assert len(source_list) == len(target_list), "Source and target lists must be of the same length."
+    logger.info("Quality estimation filter started")
+    logger.info(f"Total sentence pairs: {len(source_list)} | Threshold: {threshold}")
+
+    data = [{"src": src.strip(), "mt": tgt.strip()} for src, tgt in zip(source_list, target_list)]
+
+    # Predict
+    model_output = comet_model.predict(data, batch_size=batch_size, gpus=1)
+    scores = model_output.scores  # List of scores for each sentence pair
+
+    filtered_source, filtered_target = [], []
+    for s, t, score in zip(source_list, target_list, scores):
+        if score >= threshold:
+            filtered_source.append(s)
+            filtered_target.append(t)
+
+    logger.info(f"Quality estimation filtering complete → Remaining: {len(filtered_source)} pairs")
     return filtered_source, filtered_target
 
 if __name__=="__main__":

@@ -49,7 +49,7 @@ def load_sentence_transformer(srclang, tgtlang):
     return model
 
 def get_comet_model(model_name="masakhane/africomet-qe-stl"):
-    model_path = download_model(model_name)  # downloads once and caches
+    model_path = download_model(model_name)  
     return load_from_checkpoint(model_path)
 
 def get_fasttext_model(model_name="lid.176.bin"):
