@@ -7,6 +7,7 @@ from model_loader import load_sentence_transformer, get_comet_model, get_fasttex
 
 from pipelines import rule_filter, semantic_filter, lang_detect_filter
 from validators import quality_estimation
+from merge import merge_and_deduplicate_filtered
 
 import logging
 from datetime import datetime
@@ -305,6 +306,11 @@ def main(config_path):
             summary_log.append(summary)
     sentence_model.stop_multi_process_pool(model_pool)
     log_final_summary(summary_log, logger)
+
+    if config.get("merge", {}).get("enabled", False):
+        qe_min_score = config.get("merge", {}).get("qe_min_score", 0.7)
+        data_dir = config["output"].get("save_dir", os.path.join(config["download"]["output_dir"], "filtered_dataset"))
+        merge_and_deduplicate_filtered(data_dir, qe_min_score, config, logger, src_col=config["dataset"]["lang_pair"][0], tgt_col=config["dataset"]["lang_pair"][1])    
 
 
 

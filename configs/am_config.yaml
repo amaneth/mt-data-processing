@@ -20,13 +20,7 @@ dataset:
       tgt_key: "amh"
       column: "translation"
       "format": "nested_translation"
-    - name: "Pontoon-Translations"
-      path: "ayymen/Pontoon-Translations"
-      split: "train"
-      config_name: "en-sw"
-      src_col: "source_string"
-      tgt_col: "target_string"
-      format: "flat_column"
+
     - name: "Weblate-Translations"
       path: "ayymen/Weblate-Translations"
       split: "train"
@@ -39,12 +33,6 @@ dataset:
       split: "train"
       src_col: "translation-en-itani"
       tgt_col: "translation-am-sadiq"
-      format: "flat_column"
-    - name: "English-Swahili-Sentence-Pairs"
-      path: "Rogendo/English-Swahili-Sentence-Pairs"
-      split: "train"
-      src_col: "English sentence"
-      tgt_col: "Swahili Translation"
       format: "flat_column"
     - name: "ntrex"
       path: "davidstap/NTREX"
@@ -198,7 +186,7 @@ preprocessing:
   lowercase: true
   apply_rule_filter: true
   apply_semantic_filter: true
-  from_cache: false
+  from_cache: true
 
 filters:
   rule_filter:
@@ -219,8 +207,13 @@ filters:
       lang_code: "am"
       batch_size: 1024
       min_score: 0.7
+
 validation:
   quality_estimation: true
+
+merge:
+  enabled: true
+  qe_min_score: 0.7
 
 output:
   filtered_prefix: "filtered"

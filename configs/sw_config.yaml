@@ -83,6 +83,12 @@ dataset:
       src_col: "eng_source_text"
       tgt_col: "swa_text"
       format: "flat_column"
+    - name: "English-Swahili-Sentence-Pairs"
+      path: "Rogendo/English-Swahili-Sentence-Pairs"
+      split: "train"
+      src_col: "English sentence"
+      tgt_col: "Swahili Translation"
+      format: "flat_column"
 
 
     
