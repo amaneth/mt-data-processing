@@ -217,10 +217,12 @@ filters:
 validation:
   quality_estimation: true
 
-merge:
-  enabled: false
-  qe_min_score: 0.7
-  filter_by_qe: false
+merge_and_dedup:
+  merge: true
+  dedup: true
+  dedup_against_test: true
+  
+
 
 output:
   filtered_prefix: "filtered"
@@ -232,5 +234,14 @@ logging:
   debug: true
   log_dir: "logs/"
   log_file: "en-am.log"
+
+test_dataset:
+  name: "flores"
+  path: "facebook/flores"
+  split: "devtest"
+  src_config: "eng_Latn"
+  tgt_config: "amh_Ethi"
+  column: "sentence"
+  format: "dual_config"
 
   
