@@ -18,7 +18,7 @@ DATA_DIR = "preprocess_outputs/en-am/include"
 
 def deduplicate_against_test(
     ds: Dataset,
-    test_config: dict,
+    config: dict,
     src_col: str,
     tgt_col: str,
     logger=None
@@ -27,29 +27,25 @@ def deduplicate_against_test(
     Remove rows from ds where (src, tgt) pair exists in the test set.
     """
     # Load test set using config
-    test_ds = load_dual_config_dataset(
-        name=test_config["name"],
-        path=test_config["path"],
-        split=test_config["split"],
-        src_config=test_config["src_config"],
-        tgt_config=test_config["tgt_config"],
-        column=test_config["column"],
-        format=test_config.get("format", None)
-    )
-    # Convert both datasets to pandas
-    df = ds.to_pandas()
-    test_df = test_ds.to_pandas()
-    # Build set of (src, tgt) pairs in test set
-    test_pairs = set(zip(test_df[src_col], test_df[tgt_col]))
-    before = len(df)
-    # Remove rows where (src, tgt) in test_pairs
-    mask = ~df.apply(lambda row: (row[src_col], row[tgt_col]) in test_pairs, axis=1)
-    df = df[mask]
-    after = len(df)
+    source_list, target_list = load_dual_config_dataset(
+        config["test_dataset"],
+        dataset_cache=config["download"].get("dataset_cache", "dataset_cache/"))
+    # Create a set of (src, tgt), src, and tgt from the test set
+    test_pairs = set(zip(source_list, target_list))
+    test_srcs = set(source_list)
+    test_tgts = set(target_list)
+
+    def not_in_test(example):
+        src = example[src_col]
+        tgt = example[tgt_col]
+        return (src, tgt) not in test_pairs and src not in test_srcs and tgt not in test_tgts
+
+    filtered_ds = ds.filter(not_in_test)
     if logger:
-        logger.info(f"Removed {before - after} rows found in test set ({after} rows remain)")
-    # Convert back to HF dataset
-    return Dataset.from_pandas(df, preserve_index=False)
+        logger.info(f"Removed {len(ds) - len(filtered_ds)} rows present in test set (by pair, src, or tgt)")
+    return filtered_ds
+  
+    
 
 def deduplicate_hf_dataset(
     ds: Dataset,
@@ -94,7 +90,7 @@ def deduplicate_hf_dataset(
     return deduped
 
 
-def merge_and_deduplicate_filtered(data_dir, src_col, tgt_col, config, dedup=True, dedup_against_test=True) -> Dataset:
+def merge_and_deduplicate_filtered(data_dir, logger, config, src_col, tgt_col, dedup=True, dedup_against_test=True) -> Dataset:
     """
     Merge and deduplicate all datasets in data_dir (no filtering).
     """
@@ -146,11 +142,11 @@ def merge_and_deduplicate_filtered(data_dir, src_col, tgt_col, config, dedup=Tru
 
     if dedup_against_test:
         logger.info("🧹 Deduplicating against test set...")
-        test_config = config.get("test_set")
+        test_config = config.get("test_dataset")
         if test_config:
             merged = deduplicate_against_test(
                 merged,
-                test_config=test_config,
+                config=config,
                 src_col=src_col,
                 tgt_col=tgt_col,
                 logger=logger

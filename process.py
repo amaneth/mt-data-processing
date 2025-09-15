@@ -362,7 +362,8 @@ def main(config_path):
             config,
             src_col=config["dataset"]["lang_pair"][0],
             tgt_col=config["dataset"]["lang_pair"][1],
-            dedup=merge_cfg.get("dedup", True)
+            dedup=merge_cfg.get("dedup", True), 
+            dedup_against_test=merge_cfg.get("dedup_against_test", True)
 
         )
 

@@ -197,16 +197,16 @@ filters:
     max_length_ratio: 2.0
   semantic_filter:
     threshold: 0.7
-    chunk_size: 1024
+    chunk_size: 4096
   lang_detect_filter:
     source:
       model: "fasttext"
       lang_code: "en"
-      batch_size: 1024
+      batch_size: 2048
       min_score: 0.7      
     target:   
-      model: "fasttext"
-      lang_code: "am"
+      model: "afrolid"
+      lang_code: "amh"
       batch_size: 1024
       min_score: 0.7
   quality_estimation_filter:
