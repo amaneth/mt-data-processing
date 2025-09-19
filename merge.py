@@ -134,11 +134,8 @@ def merge_and_deduplicate_filtered(data_dir, logger, config, src_col, tgt_col, d
         deduped_size = merged_size
         logger.info("⚠ Deduplication skipped as per configuration.")    
 
-    merged_path = os.path.join(
-        data_dir, f"merged_{src_col}-{tgt_col}"
-    )
-    merged.save_to_disk(merged_path)
-    logger.info(f"💾 Saved merged dataset → {merged_path}")
+ 
+
 
     if dedup_against_test:
         logger.info("🧹 Deduplicating against test set...")
@@ -155,6 +152,12 @@ def merge_and_deduplicate_filtered(data_dir, logger, config, src_col, tgt_col, d
             logger.info(f"✨ Final dataset size after test deduplication: {final_size} rows")
         else:
             logger.warning("⚠ No test set configuration found; skipping test deduplication.")
+   
+    merged_path = os.path.join(
+        data_dir, f"merged_{src_col}-{tgt_col}"
+    )
+    merged.save_to_disk(merged_path)
+    logger.info(f"💾 Saved merged dataset → {merged_path}")
 
     merged_metadata = {
         "dataset_name": f"merged",
