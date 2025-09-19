@@ -43,13 +43,13 @@ dataset:
       "format": "dual_config"
 
     #AfriDocMT dataset subsets
-    - name: "AfriDocMT-tech"
-      path: "masakhane/AfriDocMT"
-      split: "train"
-      config_name: "tech"
-      src_col: "en"
-      tgt_col: "am"
-      format: "flat_column"
+    # - name: "AfriDocMT-tech"
+    #   path: "masakhane/AfriDocMT"
+    #   split: "train"
+    #   config_name: "tech"
+    #   src_col: "en"
+    #   tgt_col: "am"
+    #   format: "flat_column"
     - name: "AfriDocMT-health"
       path: "masakhane/AfriDocMT"
       split: "train"
@@ -57,13 +57,13 @@ dataset:
       src_col: "en"
       tgt_col: "am"
       format: "flat_column"
-    - name: "AfriDocMT-doc_tech"
-      path: "masakhane/AfriDocMT"
-      split: "train"
-      config_name: "doc_tech"
-      src_col: "en"
-      tgt_col: "am"
-      format: "flat_column"
+    # - name: "AfriDocMT-doc_tech"
+    #   path: "masakhane/AfriDocMT"
+    #   split: "train"
+    #   config_name: "doc_tech"
+    #   src_col: "en"
+    #   tgt_col: "am"
+    #   format: "flat_column"
     - name: "AfriDocMT-doc_health"
       path: "masakhane/AfriDocMT"
       split: "train"
@@ -71,13 +71,13 @@ dataset:
       src_col: "en"
       tgt_col: "am"
       format: "flat_column"
-    - name: "AfriDocMT-doc_tech_25"
-      path: "masakhane/AfriDocMT"
-      split: "train"
-      config_name: "doc_tech_25"
-      src_col: "en"
-      tgt_col: "am"
-      format: "flat_column"
+    # - name: "AfriDocMT-doc_tech_25"
+    #   path: "masakhane/AfriDocMT"
+    #   split: "train"
+    #   config_name: "doc_tech_25"
+    #   src_col: "en"
+    #   tgt_col: "am"
+    #   format: "flat_column"
     - name: "AfriDocMT-doc_health_25"
       path: "masakhane/AfriDocMT"
       split: "train"
@@ -85,13 +85,13 @@ dataset:
       src_col: "en"
       tgt_col: "am"
       format: "flat_column"
-    - name: "AfriDocMT-doc_tech_5"
-      path: "masakhane/AfriDocMT"
-      split: "train"
-      config_name: "doc_tech_5"
-      src_col: "en"
-      tgt_col: "am"
-      format: "flat_column"
+    # - name: "AfriDocMT-doc_tech_5"
+    #   path: "masakhane/AfriDocMT"
+    #   split: "train"
+    #   config_name: "doc_tech_5"
+    #   src_col: "en"
+    #   tgt_col: "am"
+    #   format: "flat_column"
     - name: "AfriDocMT-doc_health_5"
       path: "masakhane/AfriDocMT"
       split: "train"
@@ -99,13 +99,13 @@ dataset:
       src_col: "en"
       tgt_col: "am"
       format: "flat_column"
-    - name: "AfriDocMT-doc_tech_10"
-      path: "masakhane/AfriDocMT"
-      split: "train"
-      config_name: "doc_tech_10"
-      src_col: "en"
-      tgt_col: "am"
-      format: "flat_column"
+    # - name: "AfriDocMT-doc_tech_10"
+    #   path: "masakhane/AfriDocMT"
+    #   split: "train"
+    #   config_name: "doc_tech_10"
+    #   src_col: "en"
+    #   tgt_col: "am"
+    #   format: "flat_column"
     - name: "AfriDocMT-doc_health_10"
       path: "masakhane/AfriDocMT"
       split: "train"
@@ -196,23 +196,23 @@ filters:
     max_length: 200
     max_length_ratio: 2.0
   semantic_filter:
-    threshold: 0.7
+    threshold: 0.6
     chunk_size: 4096
   lang_detect_filter:
     source:
       model: "fasttext"
       lang_code: "en"
       batch_size: 2048
-      min_score: 0.7      
+      min_score: 0.6     
     target:   
       model: "afrolid"
       lang_code: "amh"
       batch_size: 1024
-      min_score: 0.7
+      min_score: 0.6
   quality_estimation_filter:
     model: "comet"
     batch_size: 32
-    min_score: 0.7
+    min_score: 0.6
 
 validation:
   quality_estimation: true
@@ -233,7 +233,7 @@ output:
 logging:
   debug: true
   log_dir: "logs/"
-  log_file: "en-am.log"
+  log_file: "en-am-filtering-0.6.log"
 
 test_dataset:
   name: "flores"
