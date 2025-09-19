@@ -162,7 +162,7 @@ def apply_quality_estimation_filter_if_enabled(source_list, target_list, config,
             source_list,
             target_list,
             comet_model,
-            threshold=qe_cfg.get("threshold", 0.7),
+            threshold=qe_cfg.get("min_score", 0.7),
             batch_size=qe_cfg.get("batch_size", 32)
         )
         logger.info(f"✅ Quality estimation filter output: {len(source_list)} sentence pairs")
