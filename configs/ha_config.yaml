@@ -3,8 +3,8 @@ dataset:
   - en
   - ha
   selected_sources:
-  - opus
   - hf
+  - opus
   - url
   opus:
   - name: wikimedia
@@ -122,41 +122,54 @@ dataset:
     src_col: translation-en-itani
     tgt_col: translation-ha-gumi
     format: flat_column
-  - name: ted_talks_iwslt
-    path: IWSLT/ted_talks_iwslt
-    split: train
-    column: translation
-    src_key: en
-    tgt_key: ha
-    format: nested_translation
 download:
   output_dir: raw/
   dataset_cache: dataset_cache
   model_cache: model_cache
 preprocessing:
-  lowercase: true
-  apply_rule_filter: true
-  apply_semantic_filter: true
-  apply_lang_detect_filter: true
-  from_cache: false
+   lowercase: true
+   apply_rule_filter: true
+   apply_semantic_filter: true
+   from_cache: true
+   apply_flores_leakage_filter: true
 filters:
   rule_filter:
     min_length: 3
     max_length: 200
     max_length_ratio: 2.0
   semantic_filter:
-    threshold: 0.7
-    chunk_size: 1000
+    threshold: 0.6
+    chunk_size: 1024
   lang_detect_filter:
-    batch_size: 1000
-    min_score: 0.5
+    source:
+      model: "fasttext"
+      lang_code: "en"
+      batch_size: 1024
+      min_score: 0.6
+    target:
+      model: "afrolid"
+      lang_code: "hau"
+      batch_size: 1024
+      min_score: 0.6
+  flores_leakage_filter:
+    enabled: true
+    flores_path: "facebook/flores"
+    src_col: "sentence_eng_Latn"
+    tgt_col: "sentence_hau_Latn"
+    split: "devtest"
+    use_fuzzy: false
+    threshold: 0.6
 validation:
   quality_estimation: true
-  language_detection: true
+
+merge:
+  enabled: true
+  qe_min_score: 0.6
+
 output:
-  filtered_prefix: filtered
-  save_format: hf
-  save_dir: preprocess_outputs
+  filtered_prefix: "filtered"
+  save_format: "hf"
+  save_dir: "preprocess_outputs/"
 logging:
   debug: true
   log_dir: logs/

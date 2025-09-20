@@ -1,4 +1,5 @@
 from sentence_transformers import SentenceTransformer
+from transformers import pipeline
 from comet import download_model, load_from_checkpoint
 import logging
 import torch
@@ -43,11 +44,28 @@ def load_sentence_transformer(srclang, tgtlang):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = SentenceTransformer(model_name, device=device, cache_folder=model_cache)
     logger.info(f"Loaded SentenceTransformer model: {model_name} on {device}")
+    # pool = model.start_multi_process_pool()
+
     return model
 
 def get_comet_model(model_name="masakhane/africomet-qe-stl"):
     model_path = download_model(model_name)  # downloads once and caches
     return load_from_checkpoint(model_path)
+
 def get_fasttext_model(model_name="lid.176.bin"):
     model = fasttext.load_model("lid.176.bin")
     return model
+
+
+
+def get_afrolid_model(model_name="UBC-NLP/afrolid_1.5"):
+    model = pipeline("text-classification",
+     model=model_name,
+     device= torch.device("cuda" if torch.cuda.is_available() 
+                          else "cpu")
+     )
+    return model
+
+
+
+#HF - AfriDocMT-tech

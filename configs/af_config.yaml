@@ -18,7 +18,7 @@ dataset:
     url: https://object.pouta.csc.fi/OPUS-SPC/v1/moses/af-en.txt.zip
   - name: qed
     url: https://object.pouta.csc.fi/OPUS-QED/v2.0a/moses/af-en.txt.zip
-  - name: OpenSubtitles v2024
+  - name: OpenSubtitles
     url: https://object.pouta.csc.fi/OPUS-OpenSubtitles/v2024/moses/af-en.txt.zip
   - name: bible-uedin
     url: https://object.pouta.csc.fi/OPUS-bible-uedin/v1/moses/af-en.txt.zip
@@ -88,34 +88,57 @@ dataset:
     src_key: en
     tgt_key: af
     format: nested_translation
+    extra_args:
+      language_pair: ["en", "af"]
+      year: "2014"
 
 download:
   output_dir: raw/
   dataset_cache: dataset_cache
   model_cache: model_cache
 preprocessing:
-  lowercase: true
-  apply_rule_filter: true
-  apply_semantic_filter: true
-  from_cache: false
+   lowercase: true
+   apply_rule_filter: true
+   apply_semantic_filter: true
+   from_cache: true
+   apply_flores_leakage_filter: true
 filters:
   rule_filter:
     min_length: 3
     max_length: 200
     max_length_ratio: 2.0
   semantic_filter:
-    threshold: 0.7
+    threshold: 0.6
     chunk_size: 1024
   lang_detect_filter:
-    batch_size: 1024
-    min_score: 0.9
+    source:
+      model: "fasttext"
+      lang_code: "en"
+      batch_size: 1024
+      min_score: 0.6
+    target:
+      model: "afrolid"
+      lang_code: "afr"
+      batch_size: 1024
+      min_score: 0.6
+  flores_leakage_filter:
+    enabled: true
+    flores_path: "facebook/flores"
+    src_col: "sentence_eng_Latn"
+    tgt_col: "sentence_afr_Latn"
+    split: "devtest"
+    use_fuzzy: false
+    threshold: 0.6
+  merge:
+  enabled: true
+  qe_min_score: 0.6
+  
 validation:
   quality_estimation: true
-  language_detection: true
 output:
-  filtered_prefix: filtered
-  save_format: hf
-  save_dir: preprocess_outputs/
+  filtered_prefix: "filtered"
+  save_format: "hf"  # or txt, csv, json
+  save_dir: "preprocess_outputs/"
 logging:
   debug: true
   log_dir: logs/

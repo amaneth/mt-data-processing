@@ -11,40 +11,10 @@ import csv
 logger = logging.getLogger("my_logger")
 
 
-def opus_info(srclang, tgtlang):
-    opus_url = (
-        f"https://opus.nlpl.eu/opusapi/?source={srclang}&target={tgtlang}"
-        "&preprocessing=moses&version=latest"
-    )
-    response = requests.get(opus_url)
-    response_json = response.json()
-    corpora = response_json["corpora"]
-
-    print(f"\n🌍 Available corpora for {srclang} → {tgtlang}:\n")
-    for entry in corpora:
-        print(f"📘 Corpus : {entry['corpus']}")
-        print(f"🔗 Pairs  : {entry.get('alignment_pairs', 'N/A')}")
-        print(f"📦 Size   : {entry.get('size', 'N/A')} KB")
-        print(f"📝 URL    : {entry['url']}\n")
-
-    return corpora
-
 
 
 
 def download_opus(srclang, tgtlang, name, url, base_dir="raw/"):
-    # Mapping for ISO 639-1 to ISO 639-3 codes for African languages in OPUS
-    opus_mapping = {
-        'zu': 'zul',
-        'am': 'amh',
-        'so': 'som',
-        'sw': 'swh',
-        'ha': 'hau',
-        'af': 'afr'
-    }
-    tgtlang_opus = opus_mapping.get(tgtlang, tgtlang)
-    srclang_opus = opus_mapping.get(srclang, srclang)
-
     logger.info(f"Downloading opus data from {url}")
     filename = download(url)
     shutil.unpack_archive(filename, extract_dir=base_dir)
@@ -54,12 +24,11 @@ def download_opus(srclang, tgtlang, name, url, base_dir="raw/"):
     os.makedirs(directory, exist_ok=True)
 
     unwanted_exts = (".ids", ".scores", ".xml", "LICENSE", "README")
-    all_files = os.listdir(base_dir)
 
     source_file = None
     target_file = None
 
-    for filename in all_files:
+    for filename in os.listdir(base_dir):
         path = os.path.join(base_dir, filename)
 
         if os.path.isdir(path):
@@ -67,37 +36,12 @@ def download_opus(srclang, tgtlang, name, url, base_dir="raw/"):
 
         if filename.endswith(unwanted_exts):
             os.remove(path)
-            continue
-
-        # Try multiple matching patterns with both lang codes
-        if (f"{srclang}-{tgtlang}.{srclang}" in filename or
-            f"{srclang_opus}-{tgtlang_opus}.{srclang}" in filename or
-            f"{srclang_opus}-{tgtlang_opus}.{srclang_opus}" in filename):
+        elif name in filename and filename.endswith(srclang):
             source_file = filename
-            shutil.move(path, os.path.join(directory, filename))
-        elif (f"{tgtlang}-{srclang}.{srclang}" in filename or
-              f"{tgtlang_opus}-{srclang_opus}.{srclang}" in filename or
-              f"{tgtlang_opus}-{srclang_opus}.{srclang_opus}" in filename):
-            source_file = filename
-            shutil.move(path, os.path.join(directory, filename))
-        elif (filename.endswith(f".{srclang}") or filename.endswith(f".{srclang_opus}")):
-            source_file = filename
-            shutil.move(path, os.path.join(directory, filename))
-        elif (f"{srclang}-{tgtlang}.{tgtlang}" in filename or
-              f"{srclang_opus}-{tgtlang_opus}.{tgtlang}" in filename or
-              f"{srclang_opus}-{tgtlang_opus}.{tgtlang_opus}" in filename):
+            shutil.move(path, os.path.join(directory, filename))  
+        elif name in filename and filename.endswith(tgtlang):
             target_file = filename
-            shutil.move(path, os.path.join(directory, filename))
-        elif (f"{tgtlang}-{srclang}.{tgtlang}" in filename or
-              f"{tgtlang_opus}-{srclang_opus}.{tgtlang}" in filename or
-              f"{tgtlang_opus}-{srclang_opus}.{tgtlang_opus}" in filename):
-            target_file = filename
-            shutil.move(path, os.path.join(directory, filename))
-        elif (filename.endswith(f".{tgtlang}") or filename.endswith(f".{tgtlang_opus}")):
-            target_file = filename
-            shutil.move(path, os.path.join(directory, filename))
-
-    print(f"Debug download_opus: Final result - Source: {source_file}, Target: {target_file}")
+            shutil.move(path, os.path.join(directory, filename)) 
 
     if source_file is None or target_file is None:
         raise FileNotFoundError(f"Could not find expected source/target files for '{name}' with languages '{srclang}' and '{tgtlang}' in '{base_dir}'.")

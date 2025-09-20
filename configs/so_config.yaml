@@ -3,9 +3,9 @@ dataset:
   - en
   - so
   selected_sources:
-  - url
-  - opus
   - hf
+  - opus
+  - url
   hf:
    - name: smol
      path: google/smol
@@ -60,6 +60,8 @@ dataset:
    - name: ted_talks_iwslt
      path: IWSLT/ted_talks_iwslt
      split: train
+     language_pair: ["en", "so"]
+     year: "2014"
      column: translation
      src_key: en
      tgt_key: so
@@ -76,7 +78,7 @@ dataset:
     url: https://object.pouta.csc.fi/OPUS-infopankki/v1/moses/en-so.txt.zip
   - name: wikimedia
     url: https://object.pouta.csc.fi/OPUS-wikimedia/v20230407/moses/en-so.txt.zip
-  - name: OpenSubtitles v2024
+  - name: OpenSubtitles
     url: https://object.pouta.csc.fi/OPUS-OpenSubtitles/v2024/moses/en-so.txt.zip
   - name: GNOME
     url: https://object.pouta.csc.fi/OPUS-GNOME/v1/moses/en-so.txt.zip
@@ -98,26 +100,44 @@ preprocessing:
    lowercase: true
    apply_rule_filter: true
    apply_semantic_filter: true
-   apply_lang_detect_filter: true
-   from_cache: false
+   from_cache: true
+   apply_flores_leakage_filter: true
 filters:
   rule_filter:
     min_length: 3
     max_length: 200
     max_length_ratio: 2.0
   semantic_filter:
-    threshold: 0.7
+    threshold: 0.6
     chunk_size: 1024
   lang_detect_filter:
-    batch_size: 1024
-    min_score: 0.9
+    source:
+      model: "fasttext"
+      lang_code: "en"
+      batch_size: 1024
+      min_score: 0.6
+    target:
+      model: "afrolid"
+      lang_code: "som"
+      batch_size: 1024
+      min_score: 0.6
+  flores_leakage_filter:
+    enabled: true
+    flores_path: "facebook/flores"
+    src_col: "sentence_eng_Latn"
+    tgt_col: "sentence_som_Latn"
+    split: "devtest"
+    use_fuzzy: false
+    threshold: 0.6
 validation:
   quality_estimation: true
-  language_detection: true
+merge:
+  enabled: true
+  qe_min_score: 0.6
 output:
-  filtered_prefix: filtered
-  save_format: hf
-  save_dir: preprocess_outputs
+  filtered_prefix: "filtered"
+  save_format: "hf"  # or txt, csv, json
+  save_dir: "preprocess_outputs/"
 logging:
   debug: true
   log_dir: logs/

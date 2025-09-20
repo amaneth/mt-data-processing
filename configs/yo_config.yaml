@@ -1,0 +1,228 @@
+dataset:
+  lang_pair:
+  - en
+  - yo
+  selected_sources:
+  - opus
+  - hf
+
+  opus:
+    #- name: QED
+    #  url: https://object.pouta.csc.fi/OPUS-QED/v2.0a/moses/en-yor.txt.zip
+    # Wikimedia translations - Community-contributed translations
+    - name: wikimedia
+      url: https://object.pouta.csc.fi/OPUS-wikimedia/v20230407/moses/en-yo.txt.zip
+    # Tatoeba - Crowd-sourced example sentences
+    - name: Tatoeba
+      url: https://object.pouta.csc.fi/OPUS-Tatoeba/v2023-04-12/moses/en-yo.txt.zip
+    # GNOME Desktop UI translations
+    - name: GNOME
+      url: https://object.pouta.csc.fi/OPUS-GNOME/v1/moses/en-yo.txt.zip
+    # Ubuntu Software translations
+    - name: Ubuntu
+      url: https://object.pouta.csc.fi/OPUS-Ubuntu/v14.10/moses/en-yo.txt.zip
+    - name: GlobalVoices
+      url: https://object.pouta.csc.fi/OPUS-GlobalVoices/v2018q4/moses/en-yo.txt.zip
+
+  hf:
+  # --- General & Large-Scale Datasets ---
+  - name: opus-100
+    path: Helsinki-NLP/opus-100
+    split: train
+    config_name: en-yo
+    column: translation
+    src_key: en
+    tgt_key: yo
+    format: nested_translation
+  - name: opus-100-dev
+    path: Helsinki-NLP/opus-100
+    split: train
+    config_name: en-yo
+    column: translation
+    src_key: en
+    tgt_key: yo
+    format: nested_translation
+  - name: opus-100-test
+    path: Helsinki-NLP/opus-100
+    split: train
+    config_name: en-yo
+    column: translation
+    src_key: en
+    tgt_key: yo
+    format: nested_translation
+  - name: smol
+    path: google/smol
+    split: train
+    config_name: smolsent__en_yo
+    src_col: src
+    tgt_col: trg
+    format: flat_column
+  - name: yoruba-english-pairs
+    path: odunola/yoruba-english-pairs
+    split: train
+    auth_token: YOUR_HF_TOKEN_HERE
+    src_col: eng
+    tgt_col: yor
+    format: flat_column
+  # - name: tatoeba-hf
+  #   path: Helsinki-NLP/tatoeba
+  #   split: train
+  #   config_name: en-yo
+  #   column: translation
+  #   src_key: en
+  #   tgt_key: yo
+  #   format: nested_translation
+  #   trust_remote_code: true
+
+  # --- African Language Specific Datasets ---
+  - name: mafand
+    path: masakhane/mafand
+    split: train
+    config_name: en-yor
+    column: translation
+    src_key: en
+    tgt_key: yor
+    format: nested_translation
+  - name: mafand-dev
+    path: masakhane/mafand
+    split: train
+    config_name: en-yor
+    column: translation
+    src_key: en
+    tgt_key: yor
+    format: nested_translation
+  - name: mafand-test
+    path: masakhane/mafand
+    split: train
+    config_name: en-yor
+    column: translation
+    src_key: en
+    tgt_key: yor
+    format: nested_translation
+  - name: AfriDocMT-tech
+    path: masakhane/AfriDocMT
+    split: train
+    config_name: tech
+    src_col: en
+    tgt_col: yo
+    format: flat_column
+  - name: AfriDocMT-health
+    path: masakhane/AfriDocMT
+    split: train
+    config_name: health
+    src_col: en
+    tgt_col: yo
+    format: flat_column
+  # - name: menyo20k_mt
+  #   path: UdS-LSV/menyo20k_mt
+  #   split: train
+  #   src_col: english
+  #   tgt_col: yoruba
+  #   format: flat_column
+  #   trust_remote_code: true
+    
+  # --- Benchmark & Test Sets ---
+  # - name: flores-101-dev
+  #   path: gsarti/flores_101
+  #   split: devtest
+  #   src_config: eng
+  #   tgt_config: yor
+  #   column: text
+  #   format: dual_config
+  # - name: flores-101-test
+  #   path: gsarti/flores_101
+  #   split: test
+  #   config_name: en-yo
+  #   column: translation
+  #   src_key: en
+  #   tgt_key: yo
+  #   format: nested_translation
+  - name: ntrex
+    path: davidstap/NTREX
+    split: test
+    src_config: eng_Latn
+    tgt_config: yor_Latn
+    column: text
+    format: dual_config
+    
+  # --- Other Multilingual Sources ---
+  - name: Pontoon-Translations
+    path: ayymen/Pontoon-Translations
+    split: train
+    config_name: en-yo
+    src_col: source_string
+    tgt_col: target_string
+    format: flat_column
+  - name: Weblate-Translations
+    path: ayymen/Weblate-Translations
+    split: train
+    config_name: en-yo
+    src_col: source_string
+    tgt_col: target_string
+    format: flat_column
+  - name: quran_multilingual_parallel
+    path: freococo/quran_multilingual_parallel
+    split: train
+    config_name: default
+    src_col: english
+    tgt_col: yoruba
+    format: flat_column
+
+#  - name: mt560_en_yo
+ #   path: michsethowusu/english-yoruba_sentence-pairs_mt560
+  #  split: train
+   # src_col: eng
+   # tgt_col: yor
+   # format: flat_column
+
+download:
+  output_dir: raw/
+  dataset_cache: dataset_cache
+  model_cache: model_cache
+preprocessing:
+   lowercase: true
+   apply_rule_filter: true
+   apply_semantic_filter: true
+   from_cache: true
+   apply_flores_leakage_filter: true
+filters:
+  rule_filter:
+    min_length: 3
+    max_length: 200
+    max_length_ratio: 2.0
+  semantic_filter:
+    threshold: 0.6
+    chunk_size: 1024
+  lang_detect_filter:
+    source:
+      model: "fasttext"
+      lang_code: "en"
+      batch_size: 1024
+      min_score: 0.6
+    target:
+      model: "afrolid"
+      lang_code: "yor"
+      batch_size: 1024
+      min_score: 0.6
+  flores_leakage_filter:
+    enabled: true
+    flores_path: "facebook/flores"
+    src_col: "sentence_eng_Latn"
+    tgt_col: "sentence_yor_Latn"
+    split: "devtest"
+    use_fuzzy: false
+    threshold: 0.6
+validation:
+  quality_estimation: true
+merge:
+  enabled: true
+  qe_min_score: 0.6
+
+output:
+  filtered_prefix: "filtered"
+  save_format: "hf"  # or txt, csv, json
+  save_dir: "preprocess_outputs/"
+logging:
+  debug: true
+  log_dir: logs/
+  log_file: en-yo.log
