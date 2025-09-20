@@ -195,19 +195,31 @@ def lang_detect_filter(source_list, target_list, src_detect_model, tgt_detect_mo
         tgt_codes, tgt_scores = detect_afrolid(tgt_detect_model, target_list)
 
     # Debug sample
-    # print("SRC:", src_codes[:5], src_scores[:5])
-    # print("TGT:", tgt_codes[:5], tgt_scores[:5])
+    print("SRC:", src_codes[:5], src_scores[:5])
+    print("TGT:", tgt_codes[:5], tgt_scores[:5])
 
     # --- Filtering ---
     filtered_source, filtered_target = [], []
 
     for s, t, sl, tl, ss, ts in zip(
-        source_list, target_list, src_codes, tgt_codes, src_scores, tgt_scores
-    ):
-        if (sl == src_cfg["lang_code"] and tl == tgt_cfg["lang_code"]
-            and ss >= src_cfg["min_score"] and ts >= tgt_cfg["min_score"]):
-            filtered_source.append(s)
-            filtered_target.append(t)
+        source_list, target_list, src_codes, tgt_codes, src_scores, tgt_scores):
+        
+        src_lang_match = (
+            sl == src_cfg["lang_code"]
+            if isinstance(src_cfg["lang_code"], str)
+            else sl in src_cfg["lang_code"]
+        )
+        tgt_lang_match = (
+            tl == tgt_cfg["lang_code"]
+            if isinstance(tgt_cfg["lang_code"], str)
+            else tl in tgt_cfg["lang_code"]
+        )
+        if (
+            src_lang_match and tgt_lang_match
+            and ss >= src_cfg["min_score"] and ts >= tgt_cfg["min_score"]
+        ):
+                filtered_source.append(s)
+                filtered_target.append(t)
 
         
 
