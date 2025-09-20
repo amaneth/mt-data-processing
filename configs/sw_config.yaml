@@ -210,6 +210,8 @@ preprocessing:
   lowercase: true
   apply_rule_filter: true
   apply_semantic_filter: true
+  apply_lang_detect_filter: true
+  apply_quality_estimation_filter: true
   from_cache: true
 
 filters:
@@ -218,15 +220,32 @@ filters:
     max_length: 200
     max_length_ratio: 2.0
   semantic_filter:
-    threshold: 0.7
-    chunk_size: 1000
+    threshold: 0.6
+    chunk_size: 4096
   lang_detect_filter:
-    batch_size: 1000
-    min_score: 0.9
+    source:
+      model: "fasttext"
+      lang_code: "en"
+      batch_size: 1024
+      min_score: 0.6     
+    target:   
+      model: "afrolid"
+      lang_code: ["swa", "swh", "swc"]
+      batch_size: 1024
+      min_score: 0.6
+  quality_estimation_filter:
+    model: "comet"
+    batch_size: 4
+    min_score: 0.6
 
 validation:
   quality_estimation: true
-  language_detection: true
+
+merge_and_dedup:
+  merge: true
+  dedup: true
+  dedup_against_test: true
+
 
 output:
   filtered_prefix: "filtered"
@@ -237,4 +256,14 @@ output:
 logging:
   debug: true
   log_dir: "logs/"
-  log_file: "en-sw.log"
+  log_file: "en-sw-filtering-0.6.log"
+
+
+  test_dataset:
+  name: "flores"
+  path: "facebook/flores"
+  split: "devtest"
+  src_config: "eng_Latn"
+  tgt_config: "swa_Latn"
+  column: "sentence"
+  format: "dual_config"
