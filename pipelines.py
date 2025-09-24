@@ -164,7 +164,12 @@ def detect_fasttext(model, lines, batch_size=32):
 
 
 def detect_afrolid(model, lines):
-    predictions = model(lines)  # pipeline handles batching internally
+    predictions = model(
+        lines,
+        truncation=True,
+        padding=True,
+        max_length=512
+    )
     codes = [pred["label"] for pred in predictions]
     scs   = [pred["score"] for pred in predictions]
     return codes, scs
