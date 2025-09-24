@@ -97,8 +97,9 @@ def merge_and_deduplicate_filtered(data_dir, logger, config, src_col, tgt_col, d
     logger.info(f"🔎 Looking for datasets in: {data_dir}")
     datasets = []
     included_datasets = []
-
-    for root, dirs, files in os.walk(data_dir):
+    lang_pair = f"{src_col}-{tgt_col}"
+    merge_path = os.path.join(data_dir, lang_pair)
+    for root, dirs, files in os.walk(merge_path):
         if "metadata.json" in files:
             meta_path = os.path.join(root, "metadata.json")
             try:
@@ -146,7 +147,7 @@ def merge_and_deduplicate_filtered(data_dir, logger, config, src_col, tgt_col, d
                 config=config,
                 src_col=src_col,
                 tgt_col=tgt_col,
-                logger=logger
+                # logger=logger
             )
             final_size = len(merged)
             logger.info(f"✨ Final dataset size after test deduplication: {final_size} rows")
@@ -174,17 +175,3 @@ def merge_and_deduplicate_filtered(data_dir, logger, config, src_col, tgt_col, d
     return merged
 
 
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Merge and deduplicate datasets")
-    parser.add_argument("--data_dir", type=str, default=DATA_DIR, help="Directory containing datasets to merge")
-    parser.add_argument("--src_col", type=str, default="en", help="Source lallnguage column name")
-    parser.add_argument("--tgt_col", type=str, required=True, help="Target language column name")
-    args = parser.parse_args()
-    merged_dataset = merge_and_deduplicate_filtered(
-        data_dir=args.data_dir,
-        src_col=args.src_col,
-        tgt_col=args.tgt_col
-    )
-    merged_dataset.save_to_disk(f"preprocess_outputs/{args.src_col}-{args.tgt_col}/{args.src_col}-{args.tgt_col}-merged")
-    logger.info("Saved merged and deduplicated dataset to preprocess_outputs/en-am-merged")
