@@ -16,6 +16,7 @@ from itertools import chain
 from tqdm import tqdm
 import argparse
 import json
+import csv
 
 
 def load_config(config_path):
@@ -337,6 +338,14 @@ def log_final_summary(summary_log, logger):
         ],
         tablefmt="github"
     ))
+
+    with open("summary.csv", "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow([
+            "Source", "Dataset", "Original", "After Rule", "After Semantic",
+            "After Lang Detect", "After QE", "Translation Quality"
+        ])
+        writer.writerows(summary_table)
 
 def main(config_path):
     config = load_config(config_path)
