@@ -211,7 +211,7 @@ filters:
       min_score: 0.6
   quality_estimation_filter:
     model: "comet"
-    batch_size: 32
+    batch_size: 16
     min_score: 0.6
 
 validation:
