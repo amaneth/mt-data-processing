@@ -3,6 +3,7 @@ import logging
 import pandas as pd
 from datasets import load_from_disk, Dataset, concatenate_datasets
 from datetime import datetime
+from dataset_loader import load_dual_config_dataset
 
 import argparse
 import json
@@ -14,6 +15,37 @@ logging.basicConfig(level=logging.INFO)
 
 DATA_DIR = "preprocess_outputs/en-am/include"
 
+
+def deduplicate_against_test(
+    ds: Dataset,
+    config: dict,
+    src_col: str,
+    tgt_col: str,
+    logger=None
+) -> Dataset:
+    """
+    Remove rows from ds where (src, tgt) pair exists in the test set.
+    """
+    # Load test set using config
+    source_list, target_list = load_dual_config_dataset(
+        config["test_dataset"],
+        dataset_cache=config["download"].get("dataset_cache", "dataset_cache/"))
+    # Create a set of (src, tgt), src, and tgt from the test set
+    test_pairs = set(zip(source_list, target_list))
+    test_srcs = set(source_list)
+    test_tgts = set(target_list)
+
+    def not_in_test(example):
+        src = example[src_col]
+        tgt = example[tgt_col]
+        return (src, tgt) not in test_pairs and src not in test_srcs and tgt not in test_tgts
+
+    filtered_ds = ds.filter(not_in_test)
+    if logger:
+        logger.info(f"Removed {len(ds) - len(filtered_ds)} rows present in test set (by pair, src, or tgt)")
+    return filtered_ds
+  
+    
 
 def deduplicate_hf_dataset(
     ds: Dataset,
@@ -58,100 +90,88 @@ def deduplicate_hf_dataset(
     return deduped
 
 
-def merge_and_deduplicate_filtered(data_dir, qe_min_score, config, logger, src_col, tgt_col) -> Dataset:
+def merge_and_deduplicate_filtered(data_dir, logger, config, src_col, tgt_col, dedup=True, dedup_against_test=True) -> Dataset:
     """
-    Merge and deduplicate datasets in data_dir,
-    but only include datasets with quality_score >= qe_min_score.
+    Merge and deduplicate all datasets in data_dir (no filtering).
     """
     logger.info(f"🔎 Looking for datasets in: {data_dir}")
     datasets = []
     included_datasets = []
-    excluded_datasets = []
-
-    for root, dirs, files in os.walk(data_dir):
+    lang_pair = f"{src_col}-{tgt_col}"
+    merge_path = os.path.join(data_dir, lang_pair)
+    for root, dirs, files in os.walk(merge_path):
         if "metadata.json" in files:
             meta_path = os.path.join(root, "metadata.json")
             try:
                 with open(meta_path, "r", encoding="utf-8") as f:
                     meta = json.load(f)
-                quality = meta.get("quality_score")
-                if quality is not None and quality >= qe_min_score:
-                    ds = load_from_disk(root)
-                    logger.info(f"✅ Including {meta['dataset_name']} → {len(ds)} rows (QE={quality:.2f})")
-                    datasets.append(ds)
-                    included_datasets.append({
-                        "dataset_name": meta["dataset_name"],
-                        "rows": len(ds),
-                        "quality_score": quality
-                    })
-                else:
-                    logger.info(f"⏭ Skipping {meta['dataset_name']} (QE={quality})")
-                    excluded_datasets.append({
-                        "dataset_name": meta.get("dataset_name"),
-                        "quality_score": quality
-                    })
+                ds = load_from_disk(root)
+                logger.info(f"✅ Including {meta.get('dataset_name', root)} → {len(ds)} rows")
+                datasets.append(ds)
+                included_datasets.append({
+                    "dataset_name": meta.get("dataset_name", root),
+                    "rows": len(ds),
+                    "quality_score": meta.get("quality_score")
+                })
             except Exception as e:
                 logger.warning(f"⚠ Error reading {meta_path}: {e}")
 
     if not datasets:
-        logger.warning(f"No datasets qualified for merge in {data_dir}")
+        logger.warning(f"No datasets found for merge in {data_dir}")
         return None
 
     # Merge all datasets
+    
     merged = concatenate_datasets(datasets)
     merged_size = len(merged)
-    logger.info(f"📦 Merged dataset size: {len(merged)} rows")
+    logger.info(f"📦 Merged dataset size: {merged_size} rows")
+    if dedup:
+        logger.info("🧹 Starting deduplication process...")
+        deduped = deduplicate_hf_dataset(merged, src_col=src_col, tgt_col=tgt_col, logger=logger)
+        deduped_size = len(deduped)
+        logger.info(f"✨ Deduplicated dataset size: {deduped_size} rows")
+        merged = deduped
+    else:
+        deduped_size = merged_size
+        logger.info("⚠ Deduplication skipped as per configuration.")    
 
-    # # Convert to pandas for deduplication
-    # df = merged.to_pandas()[[src_col, tgt_col]]
-    # df = df.rename(columns={src_col: "Source", tgt_col: "Target"})
-    # df = deduplicate_df(df)
-    # df = df.rename(columns={"Source": src_col, "Target": tgt_col})
+ 
 
-    # # Convert back to HF dataset
-    # deduped = Dataset.from_pandas(df, preserve_index=False)
-    # deduped_size = len(deduped)
-    # logger.info(f"✨ Deduplicated dataset size: {len(deduped)} rows")
 
-    deduped = deduplicate_hf_dataset(merged, src_col=src_col, tgt_col=tgt_col, logger=logger)
-    deduped_size = len(deduped)
-    logger.info(f"✨ Deduplicated dataset size: {len(deduped)} rows")
-
+    if dedup_against_test:
+        logger.info("🧹 Deduplicating against test set...")
+        test_config = config.get("test_dataset")
+        if test_config:
+            merged = deduplicate_against_test(
+                merged,
+                config=config,
+                src_col=src_col,
+                tgt_col=tgt_col,
+                # logger=logger
+            )
+            final_size = len(merged)
+            logger.info(f"✨ Final dataset size after test deduplication: {final_size} rows")
+        else:
+            logger.warning("⚠ No test set configuration found; skipping test deduplication.")
+   
     merged_path = os.path.join(
-        data_dir, f"merged_{src_col}-{tgt_col}_qe{qe_min_score}"
+        data_dir, f"merged_{src_col}-{tgt_col}"
     )
-    deduped.save_to_disk(merged_path)
+    merged.save_to_disk(merged_path)
     logger.info(f"💾 Saved merged dataset → {merged_path}")
 
-    
     merged_metadata = {
-        "dataset_name": f"merged_qe{qe_min_score}",
+        "dataset_name": f"merged",
         "lang_pair": f"{src_col}-{tgt_col}",
         "included_datasets": included_datasets,
-        "excluded_datasets": excluded_datasets,
         "total_rows_before_dedup": merged_size,
         "total_rows_after_dedup": deduped_size,
-        "qe_min_score": qe_min_score,
         "processed_at": datetime.utcnow().isoformat()
     }
     with open(os.path.join(merged_path, "metadata.json"), "w", encoding="utf-8") as f:
         json.dump(merged_metadata, f, ensure_ascii=False, indent=2)
     logger.info(f"📝 Metadata written for merged dataset → {os.path.join(merged_path, 'metadata.json')}")
 
-    return deduped
+    return merged
 
 
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Merge and deduplicate datasets")
-    parser.add_argument("--data_dir", type=str, default=DATA_DIR, help="Directory containing datasets to merge")
-    parser.add_argument("--src_col", type=str, default="en", help="Source lallnguage column name")
-    parser.add_argument("--tgt_col", type=str, required=True, help="Target language column name")
-    args = parser.parse_args()
-    merged_dataset = merge_and_deduplicate(
-        data_dir=args.data_dir,
-        src_col=args.src_col,
-        tgt_col=args.tgt_col
-    )
-    merged_dataset.save_to_disk(f"preprocess_outputs/{args.src_col}-{args.tgt_col}/{args.src_col}-{args.tgt_col}-merged")
-    logger.info("Saved merged and deduplicated dataset to preprocess_outputs/en-am-merged")

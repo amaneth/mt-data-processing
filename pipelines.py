@@ -164,7 +164,12 @@ def detect_fasttext(model, lines, batch_size=32):
 
 
 def detect_afrolid(model, lines):
-    predictions = model(lines)  # pipeline handles batching internally
+    predictions = model(
+        lines,
+        truncation=True,
+        padding=True,
+        max_length=512
+    )
     codes = [pred["label"] for pred in predictions]
     scs   = [pred["score"] for pred in predictions]
     return codes, scs
@@ -202,17 +207,50 @@ def lang_detect_filter(source_list, target_list, src_detect_model, tgt_detect_mo
     filtered_source, filtered_target = [], []
 
     for s, t, sl, tl, ss, ts in zip(
-        source_list, target_list, src_codes, tgt_codes, src_scores, tgt_scores
-    ):
-        if (sl == src_cfg["lang_code"] and tl == tgt_cfg["lang_code"]
-            and ss >= src_cfg["min_score"] and ts >= tgt_cfg["min_score"]):
-            filtered_source.append(s)
-            filtered_target.append(t)
+        source_list, target_list, src_codes, tgt_codes, src_scores, tgt_scores):
+        
+        src_lang_match = (
+            sl == src_cfg["lang_code"]
+            if isinstance(src_cfg["lang_code"], str)
+            else sl in src_cfg["lang_code"]
+        )
+        tgt_lang_match = (
+            tl == tgt_cfg["lang_code"]
+            if isinstance(tgt_cfg["lang_code"], str)
+            else tl in tgt_cfg["lang_code"]
+        )
+        if (
+            src_lang_match and tgt_lang_match
+            and ss >= src_cfg["min_score"] and ts >= tgt_cfg["min_score"]
+        ):
+                filtered_source.append(s)
+                filtered_target.append(t)
 
         
 
 
     logger.info(f"Language detection complete → Remaining: {len(filtered_source)} pairs")
+    return filtered_source, filtered_target
+
+
+def quality_estimation_filter(source_list, target_list, comet_model, threshold=0.7, batch_size=32):
+    assert len(source_list) == len(target_list), "Source and target lists must be of the same length."
+    logger.info("Quality estimation filter started")
+    logger.info(f"Total sentence pairs: {len(source_list)} | Threshold: {threshold}")
+
+    data = [{"src": src.strip(), "mt": tgt.strip()} for src, tgt in zip(source_list, target_list)]
+
+    # Predict
+    model_output = comet_model.predict(data, batch_size=batch_size, gpus=1)
+    scores = model_output.scores  # List of scores for each sentence pair
+
+    filtered_source, filtered_target = [], []
+    for s, t, score in zip(source_list, target_list, scores):
+        if score >= threshold:
+            filtered_source.append(s)
+            filtered_target.append(t)
+
+    logger.info(f"Quality estimation filtering complete → Remaining: {len(filtered_source)} pairs")
     return filtered_source, filtered_target
 
 if __name__=="__main__":

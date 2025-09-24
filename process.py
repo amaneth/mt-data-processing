@@ -5,7 +5,7 @@ from datasets import Dataset
 from dataset_loader import load_dataset_standard
 from model_loader import load_sentence_transformer, get_comet_model, get_fasttext_model, get_afrolid_model
 
-from pipelines import rule_filter, semantic_filter, lang_detect_filter
+from pipelines import rule_filter, semantic_filter, lang_detect_filter, quality_estimation_filter
 from validators import quality_estimation
 from merge import merge_and_deduplicate_filtered
 
@@ -16,6 +16,7 @@ from itertools import chain
 from tqdm import tqdm
 import argparse
 import json
+import csv
 
 
 def load_config(config_path):
@@ -154,13 +155,27 @@ def apply_lang_detect_filter_if_enabled(source_list, target_list, src_detect_mod
         logger.info(f"✅ Language detection output: {len(source_list)} sentence pairs")
     return source_list, target_list
 
+def apply_quality_estimation_filter_if_enabled(source_list, target_list, config, logger, comet_model):
+    if config["preprocessing"].get("apply_quality_estimation_filter", False):
+        qe_cfg = config["filters"]["quality_estimation_filter"]
+        logger.info("🧪 Applying quality estimation filter...")
+        source_list, target_list = quality_estimation_filter(
+            source_list,
+            target_list,
+            comet_model,
+            threshold=qe_cfg.get("min_score", 0.7),
+            batch_size=qe_cfg.get("batch_size", 32)
+        )
+        logger.info(f"✅ Quality estimation filter output: {len(source_list)} sentence pairs")
+    return source_list, target_list
+
 def run_validation(source_list, target_list, config, comet_model):
     quality_score = None
     if config["validation"].get("quality_estimation", True):
         quality_score = quality_estimation(source_list, target_list, comet_model=comet_model)
     return quality_score
 
-def save_dataset(source_list, target_list, srclang, tgtlang, ds_cfg, config, file_path, dataset_name, lang_pair, original_len, after_rule_len, after_semantic_len, after_lang_detect_len, quality_score, logger):
+def save_dataset(source_list, target_list, srclang, tgtlang, ds_cfg, config, file_path, dataset_name, lang_pair, original_len, after_rule_len, after_semantic_len, after_lang_detect_len, after_qe,  quality_score, logger):
     save_format = config["output"].get("save_format", "txt")
     if save_format == "hf":
         dataset_dict = {srclang: source_list, tgtlang: target_list}
@@ -175,6 +190,7 @@ def save_dataset(source_list, target_list, srclang, tgtlang, ds_cfg, config, fil
             "after_rule": after_rule_len or original_len,
             "after_semantic": after_semantic_len or after_rule_len or original_len,
             "after_lang_detect": after_lang_detect_len or after_semantic_len or after_rule_len or original_len,
+            "after_qe": after_qe or after_lang_detect_len or after_semantic_len or after_rule_len or original_len,
             "quality_score": quality_score,
             "processed_at": datetime.utcnow().isoformat()
         }
@@ -217,6 +233,7 @@ def process_dataset(ds_cfg, config, logger, sentence_model, model_pool, comet_mo
         "after_rule": meta["after_rule"],
         "after_semantic": meta['after_semantic'],
         "after_lang_detect": meta['after_lang_detect'],
+        "after_qe": meta['after_qe'],
         "translation_quality": meta['quality_score']
     }
         logger.info(f"⚠ Found dataset at {output_dir} but no custom metadata — processing anyway")
@@ -243,6 +260,7 @@ def process_dataset(ds_cfg, config, logger, sentence_model, model_pool, comet_mo
         logger.warning("⚠️ All segments removed after rule filter. Skipping further filtering.")
         after_semantic_len = 0
         after_lang_detect_len = 0
+        after_qe_len = 0
     else:
         # Apply semantic filter
         source_list, target_list = apply_semantic_filter_if_enabled(
@@ -252,6 +270,7 @@ def process_dataset(ds_cfg, config, logger, sentence_model, model_pool, comet_mo
         if after_semantic_len == 0:
             logger.warning("⚠️ All segments removed after semantic filter. Skipping further filtering.")
             after_lang_detect_len = 0
+            after_qe_len = 0
         else:
             # Apply lang detect filter
             source_list, target_list = apply_lang_detect_filter_if_enabled(
@@ -259,7 +278,14 @@ def process_dataset(ds_cfg, config, logger, sentence_model, model_pool, comet_mo
             )
             after_lang_detect_len = len(source_list)
             if after_lang_detect_len == 0:
+                after_qe_len = 0
                 logger.warning("⚠️ All segments removed after language detection filter.")
+            else:
+                # Apply quality estimation filter
+                source_list, target_list = apply_quality_estimation_filter_if_enabled(
+                    source_list, target_list, config, logger, comet_model
+                )
+                after_qe_len = len(source_list)  
 
     # Only run validation if something remains
     if len(source_list) > 0:
@@ -269,7 +295,7 @@ def process_dataset(ds_cfg, config, logger, sentence_model, model_pool, comet_mo
         quality_score = None
         logger.info("⚠️ Skipped validation because no segments remain after filtering.")
 
-    save_dataset(source_list, target_list, srclang, tgtlang,ds_cfg, config, file_path, dataset_name, lang_pair, original_len, after_rule_len, after_semantic_len, after_lang_detect_len, quality_score, logger)
+    save_dataset(source_list, target_list, srclang, tgtlang,ds_cfg, config, file_path, dataset_name, lang_pair, original_len, after_rule_len, after_semantic_len, after_lang_detect_len, after_qe_len,  quality_score, logger)
 
     return {
         "source": ds_cfg["source"],
@@ -278,6 +304,7 @@ def process_dataset(ds_cfg, config, logger, sentence_model, model_pool, comet_mo
         "after_rule": after_rule_len,
         "after_semantic": after_semantic_len,
         "after_lang_detect": after_lang_detect_len,
+        "after_qe": after_qe_len,
         "translation_quality": quality_score
     }
 
@@ -285,13 +312,40 @@ def log_final_summary(summary_log, logger):
     total_original = sum(entry["original"] for entry in summary_log)
     total_after_rule = sum(entry["after_rule"] for entry in summary_log)
     total_after_semantic = sum(entry["after_semantic"] for entry in summary_log)
-    total_after_lang_detect = sum(entry["after_lang_detect"] for entry in summary_log)  
+    total_after_lang_detect = sum(entry["after_lang_detect"] for entry in summary_log)
+    total_after_qe = sum(entry["after_qe"] for entry in summary_log)
+
     summary_table = [
-        [entry["source"], entry["name"], entry["original"], entry["after_rule"], entry["after_semantic"], entry["after_lang_detect"], entry["translation_quality"]]
+        [
+            entry["source"],
+            entry["name"],
+            entry["original"],
+            entry["after_rule"],
+            entry["after_semantic"],
+            entry["after_lang_detect"],
+            entry["after_qe"],
+            entry["translation_quality"]
+        ]
         for entry in summary_log
     ]
-    summary_table.append(["TOTAL", "-", total_original, total_after_rule, total_after_semantic, total_after_lang_detect, "-"])
-    logger.info("\n📊 Final Dataset Summary:\n" + tabulate(summary_table, headers=["Source", "Dataset", "Original", "After Rule", "After Semantic", "After Lang Detect", "Translation Quality"], tablefmt="github"))
+    summary_table.append([
+        "TOTAL", "-", total_original, total_after_rule, total_after_semantic, total_after_lang_detect, total_after_qe, "-"
+    ])
+    logger.info("\n📊 Final Dataset Summary:\n" + tabulate(
+        summary_table,
+        headers=[
+            "Source", "Dataset", "Original", "After Rule", "After Semantic", "After Lang Detect", "After QE", "Translation Quality"
+        ],
+        tablefmt="github"
+    ))
+
+    with open("summary.csv", "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow([
+            "Source", "Dataset", "Original", "After Rule", "After Semantic",
+            "After Lang Detect", "After QE", "Translation Quality"
+        ])
+        writer.writerows(summary_table)
 
 def main(config_path):
     config = load_config(config_path)
@@ -307,10 +361,20 @@ def main(config_path):
     sentence_model.stop_multi_process_pool(model_pool)
     log_final_summary(summary_log, logger)
 
-    if config.get("merge", {}).get("enabled", False):
-        qe_min_score = config.get("merge", {}).get("qe_min_score", 0.7)
+    merge_cfg = config.get("merge_and_dedup", {})
+
+    if merge_cfg.get("merge", False):
         data_dir = config["output"].get("save_dir", os.path.join(config["download"]["output_dir"], "filtered_dataset"))
-        merge_and_deduplicate_filtered(data_dir, qe_min_score, config, logger, src_col=config["dataset"]["lang_pair"][0], tgt_col=config["dataset"]["lang_pair"][1])    
+        merge_and_deduplicate_filtered(
+            data_dir,
+            logger,
+            config,
+            src_col=config["dataset"]["lang_pair"][0],
+            tgt_col=config["dataset"]["lang_pair"][1],
+            dedup=merge_cfg.get("dedup", True), 
+            dedup_against_test=merge_cfg.get("dedup_against_test", True)
+
+        )
 
 
 

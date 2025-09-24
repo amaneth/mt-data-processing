@@ -43,13 +43,13 @@ dataset:
       "format": "dual_config"
 
     #AfriDocMT dataset subsets
-    - name: "AfriDocMT-tech"
-      path: "masakhane/AfriDocMT"
-      split: "train"
-      config_name: "tech"
-      src_col: "en"
-      tgt_col: "am"
-      format: "flat_column"
+    # - name: "AfriDocMT-tech"
+    #   path: "masakhane/AfriDocMT"
+    #   split: "train"
+    #   config_name: "tech"
+    #   src_col: "en"
+    #   tgt_col: "am"
+    #   format: "flat_column"
     - name: "AfriDocMT-health"
       path: "masakhane/AfriDocMT"
       split: "train"
@@ -57,13 +57,13 @@ dataset:
       src_col: "en"
       tgt_col: "am"
       format: "flat_column"
-    - name: "AfriDocMT-doc_tech"
-      path: "masakhane/AfriDocMT"
-      split: "train"
-      config_name: "doc_tech"
-      src_col: "en"
-      tgt_col: "am"
-      format: "flat_column"
+    # - name: "AfriDocMT-doc_tech"
+    #   path: "masakhane/AfriDocMT"
+    #   split: "train"
+    #   config_name: "doc_tech"
+    #   src_col: "en"
+    #   tgt_col: "am"
+    #   format: "flat_column"
     - name: "AfriDocMT-doc_health"
       path: "masakhane/AfriDocMT"
       split: "train"
@@ -71,13 +71,13 @@ dataset:
       src_col: "en"
       tgt_col: "am"
       format: "flat_column"
-    - name: "AfriDocMT-doc_tech_25"
-      path: "masakhane/AfriDocMT"
-      split: "train"
-      config_name: "doc_tech_25"
-      src_col: "en"
-      tgt_col: "am"
-      format: "flat_column"
+    # - name: "AfriDocMT-doc_tech_25"
+    #   path: "masakhane/AfriDocMT"
+    #   split: "train"
+    #   config_name: "doc_tech_25"
+    #   src_col: "en"
+    #   tgt_col: "am"
+    #   format: "flat_column"
     - name: "AfriDocMT-doc_health_25"
       path: "masakhane/AfriDocMT"
       split: "train"
@@ -85,13 +85,13 @@ dataset:
       src_col: "en"
       tgt_col: "am"
       format: "flat_column"
-    - name: "AfriDocMT-doc_tech_5"
-      path: "masakhane/AfriDocMT"
-      split: "train"
-      config_name: "doc_tech_5"
-      src_col: "en"
-      tgt_col: "am"
-      format: "flat_column"
+    # - name: "AfriDocMT-doc_tech_5"
+    #   path: "masakhane/AfriDocMT"
+    #   split: "train"
+    #   config_name: "doc_tech_5"
+    #   src_col: "en"
+    #   tgt_col: "am"
+    #   format: "flat_column"
     - name: "AfriDocMT-doc_health_5"
       path: "masakhane/AfriDocMT"
       split: "train"
@@ -99,13 +99,13 @@ dataset:
       src_col: "en"
       tgt_col: "am"
       format: "flat_column"
-    - name: "AfriDocMT-doc_tech_10"
-      path: "masakhane/AfriDocMT"
-      split: "train"
-      config_name: "doc_tech_10"
-      src_col: "en"
-      tgt_col: "am"
-      format: "flat_column"
+    # - name: "AfriDocMT-doc_tech_10"
+    #   path: "masakhane/AfriDocMT"
+    #   split: "train"
+    #   config_name: "doc_tech_10"
+    #   src_col: "en"
+    #   tgt_col: "am"
+    #   format: "flat_column"
     - name: "AfriDocMT-doc_health_10"
       path: "masakhane/AfriDocMT"
       split: "train"
@@ -186,6 +186,8 @@ preprocessing:
   lowercase: true
   apply_rule_filter: true
   apply_semantic_filter: true
+  apply_lang_detect_filter: true
+  apply_quality_estimation_filter: true
   from_cache: true
 
 filters:
@@ -194,26 +196,33 @@ filters:
     max_length: 200
     max_length_ratio: 2.0
   semantic_filter:
-    threshold: 0.7
-    chunk_size: 1024
+    threshold: 0.6
+    chunk_size: 4096
   lang_detect_filter:
     source:
       model: "fasttext"
       lang_code: "en"
-      batch_size: 1024
-      min_score: 0.7      
+      batch_size: 2048
+      min_score: 0.6     
     target:   
-      model: "fasttext"
-      lang_code: "am"
+      model: "afrolid"
+      lang_code: "amh"
       batch_size: 1024
-      min_score: 0.7
+      min_score: 0.6
+  quality_estimation_filter:
+    model: "comet"
+    batch_size: 16
+    min_score: 0.6
 
 validation:
   quality_estimation: true
 
-merge:
-  enabled: true
-  qe_min_score: 0.7
+merge_and_dedup:
+  merge: true
+  dedup: true
+  dedup_against_test: true
+  
+
 
 output:
   filtered_prefix: "filtered"
@@ -224,6 +233,15 @@ output:
 logging:
   debug: true
   log_dir: "logs/"
-  log_file: "en-am.log"
+  log_file: "en-am-filtering-0.6.log"
+
+test_dataset:
+  name: "flores"
+  path: "facebook/flores"
+  split: "devtest"
+  src_config: "eng_Latn"
+  tgt_config: "amh_Ethi"
+  column: "sentence"
+  format: "dual_config"
 
   
