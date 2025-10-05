@@ -1,0 +1,118 @@
+# Egyptian Arabic (arz) config.yaml
+
+dataset:
+  lang_pair: ["en", "arz"]
+  selected_sources: ["csv", "opus", "url", "hf"]
+  csv:
+    - name: "combined_arzen_dataset"
+      path: "combined_arzen_dataset.csv"
+      src_col: "English_Translation"
+      tgt_col: "Arabic_Text"
+      format: "csv"
+
+  hf:
+    - name: "arz-en-parallel-corpus"
+      path: "IbrahimAmin/arz-en-parallel-corpus"
+      split: "train"
+      src_col: "en"
+      tgt_col: "arz"
+      format: "flat_column"
+    - name: "news-commentary-eng-arz"
+      path: "ymoslem/news-commentary-eng-arz"
+      split: "train"
+      src_col: "english"
+      tgt_col: "egyptian_arabic"
+      format: "flat_column"
+    - name: "mteb/tatoeba-bitext-mining"
+      path: "mteb/tatoeba-bitext-mining"
+      split: "test"
+      config: "arz-eng"
+      src_col: "sentence2"
+      tgt_col: "sentence1"
+      format: "flat_column"
+
+  opus:
+
+    - name: "Tatoeba"
+      url: "https://object.pouta.csc.fi/OPUS-Tatoeba/v2023-04-12/moses/arz-en.txt.zip"
+    - name: "translatewiki"
+      url: "https://object.pouta.csc.fi/OPUS-translatewiki/v2025-01-01/moses/arz-en.txt.zip"
+
+
+url:
+  - name: "arz-en-gatitos"
+    src_col: "arz"
+    tgt_col: "en"
+    format: "tsv"
+    url: "https://huggingface.co/datasets/FrancophonIA/gatitos/blob/main/data/arz_en.tsv"
+
+download:
+  output_dir: "raw/"
+  dataset_cache: "dataset_cache"
+  model_cache: "model_cache"
+
+preprocessing:
+  lowercase: false
+  apply_rule_filter: true
+  apply_semantic_filter: true
+  apply_lang_detect_filter: true
+  from_cache: true
+  max_total_rows: 1500000
+  chunk_size_process: 100000
+
+filters:
+  rule_filter:
+    min_length: 3
+    max_length: 200
+    max_length_ratio: 2.0
+  semantic_filter:
+    threshold: 0.6
+    chunk_size: 10000
+    batch_size: 7680
+  lang_detect_filter:
+    batch_size: 40960
+    target:
+      model: "fasttext"
+      lang_code: "ar"
+      min_score: 0.6
+    src:
+      model: "fasttext"
+      lang_code: "en"
+      min_score: 0.6
+
+validation:
+  quality_estimation: true
+  language_detection: true
+
+quality_estimation:
+  # Model configuration
+  model_name: "masakhane/africomet-qe-stl-1.1"
+  src_lang: "en"
+  tgt_lang: "arz"
+
+  # Filtering configuration
+  apply_filter: true  # Set to false to pass all pairs through
+  threshold: 0.6
+  sentence_level: true  # true for sentence-level, false for document-level
+
+  # Batch processing
+  batch_size: 32
+
+  # Model type selection
+  model_type: "comet"  # Options: "comet", "custom", "huggingface"
+
+output:
+  filtered_prefix: "filtered"
+  save_format: "hf"  # or txt, csv, json
+  save_dir: "preprocess_outputs/"
+
+
+merge_and_dedup:
+  merge: true
+  dedup: true
+  dedup_against_test: true
+
+logging:
+  debug: true
+  log_dir: "logs/"
+  log_file: "arz-en.log"

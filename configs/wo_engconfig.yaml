@@ -1,0 +1,114 @@
+# Wolof (wo) config.yaml
+
+dataset:
+  lang_pair: ["en", "wo"]
+  selected_sources: ["hf", "opus", "url"]
+
+  hf:
+    - name: "english_wolof_translation"
+      path: "sudoping01/english-wolof-translation"
+      split: "train"
+      src_col: "en"
+      tgt_col: "wo"
+      format: "flat_column"
+    - name: "pontoon_translations"
+      path: "ayymen/Pontoon-Translations"
+      split: "train"
+      config_name: "en-wo"
+      src_col: "source_string"
+      tgt_col: "target_string"
+      format: "flat_column"
+    - name: "comet_score_en_wo"
+      path: "Tadesse/COMET_score"
+      split: "train"
+      config_name: "eng_wol"
+      src_col: "english"
+      tgt_col: "Wolof"
+      format: "flat_column"
+
+    - name: "wolof_english_french"
+      path: "bilalfaye/wolof-english-french"
+      split: "train"
+      src_col: "en"
+      tgt_col: "wo"
+      format: "flat_column"
+
+    - name: "wolof_english_bible"
+      path: "cibfaye/wolof-english-bible"
+      split: "train"
+      column: "translation"
+      src_key: "en"
+      tgt_key: "wo"
+      format: "nested_translation"
+    - name: "smol"
+      path: "galsenai/english-wolof-smol-translation"
+      split: "train"
+      src_col: "en"
+      tgt_col: "wo"
+      format: "flat_column"
+
+  opus:
+    - name: "bible-uedin"
+      url: "https://object.pouta.csc.fi/OPUS-bible-uedin/v1/moses/en-wo.txt.zip"
+    - name: "wikimedia"
+      url: "https://object.pouta.csc.fi/OPUS-wikimedia/v20230407/moses/en-wo.txt.zip"
+    - name: "Ubuntu"
+      url: "https://object.pouta.csc.fi/OPUS-Ubuntu/v14.10/moses/en-wo.txt.zip"
+    
+
+
+
+download:
+  output_dir: "raw/"
+  dataset_cache: "/mnt/vol/mt-data-processing/hf_cache"
+  model_cache: "/mnt/vol/mt-data-processing/model_cache"
+
+preprocessing:
+  lowercase: true
+  apply_rule_filter: true
+  apply_semantic_filter: true
+  from_cache: true
+  max_total_rows: 150000
+  chunk_size_process: 100000
+
+filters:
+  rule_filter:
+    min_length: 3
+    max_length: 200
+    max_length_ratio: 2.0
+  semantic_filter:
+    threshold: 0.6
+    chunk_size: 10000
+    batch_size: 7680
+  lang_detect_filter:
+    batch_size: 40960
+    target:
+      model: "afrolid"
+      lang_code: "wol"
+      min_score: 0.6
+    src:
+      model: "fasttext"
+      lang_code: "en"
+      min_score: 0.6
+
+validation:
+  quality_estimation: true
+  language_detection: true
+  qe_type: "sentence_level"
+  qe_threshold: 0.6
+
+output:
+  filtered_prefix: "filtered"
+  save_format: "hf"  # or txt, csv, json
+  save_dir: "preprocess_outputs/"
+
+
+merge_and_dedup:
+  merge: true
+  dedup: true
+  dedup_against_test: true
+
+logging:
+  debug: true
+  log_dir: "logs/"
+  log_file: "en-wo.log"

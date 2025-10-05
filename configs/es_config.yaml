@@ -1,0 +1,249 @@
+# Spanish (es) config.yaml
+
+dataset:
+  lang_pair: ["en", "es"]
+  selected_sources: ["opus", "hf", "url"]
+
+  hf:
+    - name: "opus_books"
+      path: "Helsinki-NLP/opus_books"
+      split: "train"
+      config_name: "en-es"
+      src_key: "en"
+      tgt_key: "es"
+      column: "translation"
+      format: "nested_translation"
+
+    - name: "ted_talks_iwslt"
+      path: "Helsinki-NLP/TED2020"
+      split: "train"
+      config_name: "en-es"
+      src_key: "en"
+      tgt_key: "es"
+      column: "translation"
+      format: "nested_translation"
+
+    - name: "wmt13"
+      path: "Helsinki-NLP/wmt13"
+      split: "train"
+      config_name: "es-en"
+      src_key: "en"
+      tgt_key: "es"
+      column: "translation"
+      format: "nested_translation"
+
+    - name: "wmt16"
+      path: "Helsinki-NLP/wmt16"
+      split: "train"
+      config_name: "es-en"
+      src_key: "en"
+      tgt_key: "es"
+      column: "translation"
+      format: "nested_translation"
+
+    - name: "un_multi"
+      path: "Helsinki-NLP/UN_multi"
+      split: "train"
+      config_name: "en-es"
+      src_key: "en"
+      tgt_key: "es"
+      column: "translation"
+      format: "nested_translation"
+
+    - name: "tatoeba"
+      path: "Helsinki-NLP/tatoeba"
+      split: "train"
+      config_name: "eng-spa"
+      src_key: "eng"
+      tgt_key: "spa"
+      column: "translation"
+      format: "nested_translation"
+
+    - name: "news_commentary"
+      path: "Helsinki-NLP/news_commentary"
+      split: "train"
+      config_name: "en-es"
+      src_key: "en"
+      tgt_key: "es"
+      column: "translation"
+      format: "nested_translation"
+
+    - name: "europarl"
+      path: "Helsinki-NLP/europarl"
+      split: "train"
+      config_name: "en-es"
+      src_key: "en"
+      tgt_key: "es"
+      column: "translation"
+      format: "nested_translation"
+
+    - name: "lingvanex_test_references"
+      path: "lingvanex/lingvanex_test_references"
+      split: "test"
+      config_name: "en-es"
+      src_col: "en"
+      tgt_col: "es"
+      format: "flat_column"
+
+    - name: "multi_para_crawl"
+      path: "Helsinki-NLP/multi_para_crawl"
+      split: "train"
+      config_name: "en-es"
+      src_key: "en"
+      tgt_key: "es"
+      column: "translation"
+      format: "nested_translation"
+
+    - name: "bible_para"
+      path: "Helsinki-NLP/bible_para"
+      split: "train"
+      config_name: "en-es"
+      src_key: "en"
+      tgt_key: "es"
+      column: "translation"
+      format: "nested_translation"
+
+    - name: "para_crawl"
+      path: "Helsinki-NLP/para_crawl"
+      split: "train"
+      config_name: "en-es"
+      src_key: "en"
+      tgt_key: "es"
+      column: "translation"
+      format: "nested_translation"
+
+  opus:
+    - name: "EMEA"
+      url: "https://object.pouta.csc.fi/OPUS-EMEA/v3/moses/en-es.txt.zip"
+    - name: "NeuLab-TedTalks"
+      url: "https://object.pouta.csc.fi/OPUS-NeuLab-TedTalks/v1/moses/en-es.txt.zip"
+    - name: "Books"
+      url: "https://object.pouta.csc.fi/OPUS-Books/v1/moses/en-es.txt.zip"
+    - name: "ELRC-EMEA"
+      url: "https://object.pouta.csc.fi/OPUS-ELRC-EMEA/v1/moses/en-es.txt.zip"
+    - name: "JRC-Acquis"
+      url: "https://object.pouta.csc.fi/OPUS-JRC-Acquis/v3.0/moses/en-es.txt.zip"
+    - name: "TED2020"
+      url: "https://object.pouta.csc.fi/OPUS-TED2020/v1/moses/es-en.txt.zip"
+    - name: "bible-uedin"
+      url: "https://object.pouta.csc.fi/OPUS-bible-uedin/v1/moses/es-en.txt.zip"
+    - name: "GNOME"
+      url: "https://object.pouta.csc.fi/OPUS-GNOME/v1/moses/es-en.txt.zip"
+    - name: "KDE4"
+      url: "https://object.pouta.csc.fi/OPUS-KDE4/v2/moses/es-en.txt.zip"
+    - name: "Ubuntu"
+      url: "https://object.pouta.csc.fi/OPUS-Ubuntu/v14.10/moses/es-en.txt.zip"
+    - name: "Tatoeba"
+      url: "https://object.pouta.csc.fi/OPUS-Tatoeba/v2023-04-12/moses/es-en.txt.zip"
+
+    - name: "Europarl"
+      url: "https://object.pouta.csc.fi/OPUS-Europarl/v8/moses/es-en.txt.zip"
+    - name: "EMEA"
+      url: "https://object.pouta.csc.fi/OPUS-EMEA/v3/moses/es-en.txt.zip"
+    - name: "ECB"
+      url: "https://object.pouta.csc.fi/OPUS-ECB/v1/moses/es-en.txt.zip"
+    - name: "JRC-Acquis"
+      url: "https://object.pouta.csc.fi/OPUS-JRC-Acquis/v3.0/moses/es-en.txt.zip"
+    - name: "DGT"
+      url: "https://object.pouta.csc.fi/OPUS-DGT/v2019/moses/es-en.txt.zip"
+    - name: "EUbookshop"
+      url: "https://object.pouta.csc.fi/OPUS-EUbookshop/v2/moses/es-en.txt.zip"
+    - name: "EUconst"
+      url: "https://object.pouta.csc.fi/OPUS-EUconst/v1/moses/es-en.txt.zip"
+    - name: "Infopankki"
+      url: "https://object.pouta.csc.fi/OPUS-Infopankki/v1/moses/es-en.txt.zip"
+    - name: "WMT-News"
+      url: "https://object.pouta.csc.fi/OPUS-WMT-News/v2019/moses/es-en.txt.zip"
+    - name: "Books"
+      url: "https://object.pouta.csc.fi/OPUS-Books/v1/moses/es-en.txt.zip"
+    - name: "PHP"
+      url: "https://object.pouta.csc.fi/OPUS-PHP/v1/moses/es-en.txt.zip"
+    - name: "XLEnt"
+      url: "https://object.pouta.csc.fi/OPUS-XLEnt/v1/moses/es-en.txt.zip"
+    - name: "ParaCrawl"
+      url: "https://object.pouta.csc.fi/OPUS-ParaCrawl/v9/moses/es-en.txt.zip"
+    - name: "CCAligned"
+      url: "https://object.pouta.csc.fi/OPUS-CCAligned/v1/moses/es-en.txt.zip"
+    - name: "CCMatrix"
+      url: "https://object.pouta.csc.fi/OPUS-CCMatrix/v1/moses/es-en.txt.zip"
+
+  url:
+    - name: "spanish-english-parallel-corpus"
+      url: "https://www.kaggle.com/datasets/lonnieqin/spanish-english-parallel-corpus"
+      format: "csv"
+    - name: "wmt13-es-en"
+      url: "http://www.statmt.org/wmt13/translation-task/training-parallel-es-en.tgz"
+      format: "tgz"
+    - name: "europarl-es-en"
+      url: "https://www.statmt.org/europarl/v10/training/europarl-v10.es-en.tsv.gz"
+      format: "tsv"
+    - name: "cc-matrix-es-en"
+      url: "https://opus.nlpl.eu/download.php?f=CCMatrix/v1/moses/es-en.txt.zip"
+      format: "zip"
+    - name: "news-commentary-es-en"
+      url: "http://www.statmt.org/wmt16/translation-task/dev/news-commentary-v11.es-en.tsv.gz"
+      format: "tsv"
+
+  table:
+    - name: "mt-evaluation-spanish"
+      url: "https://zenodo.org/records/3734260/files/spanish.tsv?download=1"
+      file_type: "tsv"
+      min_score: 0.6
+      target:
+        model: "fasttext"
+
+
+download:
+  output_dir: "raw/"
+  dataset_cache: "dataset_cache"
+  model_cache: "model_cache"
+
+preprocessing:
+  lowercase: true
+  apply_rule_filter: true
+  apply_semantic_filter: true
+  from_cache: true
+  max_total_rows: 1500000
+  chunk_size_process: 100000
+
+filters:
+  rule_filter:
+    min_length: 3
+    max_length: 200
+    max_length_ratio: 2.0
+  semantic_filter:
+    threshold: 0.6
+    chunk_size: 10000
+    batch_size: 7680
+  lang_detect_filter:
+    batch_size: 40960
+    target:
+      model: "fasttext"
+      lang_code: "es"
+      min_score: 0.6
+    src:
+      model: "fasttext"
+      lang_code: "en"
+      min_score: 0.6
+
+validation:
+  quality_estimation: true
+  language_detection: true
+  qe_type: "sentence_level"
+  qe_threshold: 0.6
+
+output:
+  filtered_prefix: "filtered"
+  save_format: "hf"  # or txt, csv, json
+  save_dir: "preprocess_outputs/"
+
+
+merge_and_dedup:
+  merge: true
+  dedup: true
+  dedup_against_test: true
+  
+logging:
+  debug: true
+  log_dir: "logs/"
+  log_file: "en-es.log"

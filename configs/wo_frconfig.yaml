@@ -1,0 +1,88 @@
+# Wolof (wo) config.yaml
+
+dataset:
+  lang_pair: ["fr", "wo"]
+  selected_sources: ["opus", "hf", "url"]
+
+  hf:
+
+    - name: "french-wolof-translation-gs"
+      path: "Alwaly/french-wolof-translation-gs"
+      split: "train"
+      src_col: "french"
+      tgt_col: "wolof"
+      format: "flat_column"
+    - name: "wolof_english_french"
+      path: "bilalfaye/wolof-english-french"
+      split: "train"
+      src_col: "fr"
+      tgt_col: "wo"
+      format: "flat_column"
+
+  opus:
+    - name: "bible-uedin"
+      url: "https://object.pouta.csc.fi/OPUS-bible-uedin/v1/moses/fr-wo.txt.zip"
+    - name: "wikimedia"
+      url: "https://object.pouta.csc.fi/OPUS-wikimedia/v20230407/moses/fr-wo.txt.zip"
+    - name: "translatewiki"
+      url: "https://object.pouta.csc.fi/OPUS-translatewiki/v2025-01-01/moses/fr-wo.txt.zip"
+    - name: "Ubuntu"
+      url: "https://object.pouta.csc.fi/OPUS-Ubuntu/v14.10/moses/fr-wo.txt.zip"
+
+
+
+
+download:
+  output_dir: "raw/"
+  dataset_cache: "/mnt/vol/mt-data-processing/hf_cache"
+  model_cache: "/mnt/vol/mt-data-processing/model_cache"
+
+preprocessing:
+  lowercase: true
+  apply_rule_filter: true
+  apply_semantic_filter: true
+  from_cache: true
+  max_total_rows: 150000
+  chunk_size_process: 100000
+
+filters:
+  rule_filter:
+    min_length: 3
+    max_length: 200
+    max_length_ratio: 2.0
+  semantic_filter:
+    threshold: 0.6
+    chunk_size: 10000
+    batch_size: 7680
+  lang_detect_filter:
+    batch_size: 40960
+    target:
+      model: "afrolid"
+      lang_code: "wol"
+      min_score: 0.6
+    src:
+      model: "fasttext"
+      lang_code: "fr"
+      min_score: 0.6
+
+validation:
+  quality_estimation: true
+  language_detection: true
+  qe_type: "sentence_level"
+  qe_threshold: 0.6
+
+output:
+  filtered_prefix: "filtered"
+  save_format: "hf"  # or txt, csv, json
+  save_dir: "preprocess_outputs/"
+
+
+merge_and_dedup:
+  merge: true
+  dedup: true
+  dedup_against_test: true
+
+logging:
+  debug: true
+  log_dir: "logs/"
+  log_file: "fr-wo.log"
