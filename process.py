@@ -80,22 +80,35 @@ def setup_logger(config):
 
 def load_models(config):
     srclang, tgtlang = config["dataset"]["lang_pair"]
-    src_lang_model = config["filters"]["lang_detect_filter"]["source"].get("model", "fasttext")
-    tgt_lang_model = config["filters"]["lang_detect_filter"]["target"].get("model", "afrolid")
-    sentence_model = load_sentence_transformer(srclang, tgtlang)
-    model_pool = sentence_model.start_multi_process_pool()
-    comet_model = get_comet_model(model_name="masakhane/africomet-qe-stl")
+    sentence_model = None
+    model_pool = None
+    comet_model = None
+    src_detect_model = None
+    tgt_detect_model = None
 
-    if src_lang_model == "afrolid":
-        src_detect_model = get_afrolid_model(model_name="UBC-NLP/afrolid_1.5")
-    else:    
-        src_detect_model = get_fasttext_model(model_name="lid.176.bin")    
+    # Load sentence transformer only if semantic filter is enabled (default: True)
+    if config["preprocessing"].get("apply_semantic_filter", True):
+        sentence_model = load_sentence_transformer(srclang, tgtlang)
+        model_pool = sentence_model.start_multi_process_pool()
 
-    if tgt_lang_model == "afrolid":
-        tgt_detect_model = get_afrolid_model(model_name="UBC-NLP/afrolid_1.5")
-    else:    
-        tgt_detect_model = get_fasttext_model(model_name="lid.176.bin")
-    
+    # Load comet model only if quality estimation filter or validation is enabled (default: True)
+    if config["preprocessing"].get("apply_quality_estimation_filter", True) or config.get("validation", {}).get("quality_estimation", True):
+        comet_model = get_comet_model(model_name="masakhane/africomet-qe-stl")
+
+    # Load language detection models only if lang detect filter is enabled (default: True)
+    if config["preprocessing"].get("apply_lang_detect_filter", True):
+        src_lang_model = config["filters"]["lang_detect_filter"]["source"].get("model", "fasttext")
+        tgt_lang_model = config["filters"]["lang_detect_filter"]["target"].get("model", "afrolid")
+
+        if src_lang_model == "afrolid":
+            src_detect_model = get_afrolid_model(model_name="UBC-NLP/afrolid_1.5")
+        else:
+            src_detect_model = get_fasttext_model(model_name="lid.176.bin")
+
+        if tgt_lang_model == "afrolid":
+            tgt_detect_model = get_afrolid_model(model_name="UBC-NLP/afrolid_1.5")
+        else:
+            tgt_detect_model = get_fasttext_model(model_name="lid.176.bin")
 
     return sentence_model, model_pool, comet_model, src_detect_model, tgt_detect_model
 
@@ -358,7 +371,8 @@ def main(config_path):
         summary = process_dataset(ds_cfg, config, logger, sentence_model, model_pool, comet_model, src_detect_model, tgt_detect_model)
         if summary:
             summary_log.append(summary)
-    sentence_model.stop_multi_process_pool(model_pool)
+    if model_pool is not None:
+        sentence_model.stop_multi_process_pool(model_pool)
     log_final_summary(summary_log, logger)
 
     merge_cfg = config.get("merge_and_dedup", {})
