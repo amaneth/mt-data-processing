@@ -1,0 +1,110 @@
+# config.yaml
+
+dataset:
+  lang_pair: ["fr", "ln"]
+  selected_sources: ["opus", "local"] 
+
+  hf:
+    # - name: "afrolingu_fra_lin"
+    #   path: "UBC-NLP/AfroLingu-MT"
+    #   split: "train"
+    #   src_col: "input"
+    #   tgt_col: "output"
+    #   format: "flat_column"
+    #   extra_args: {}
+    #   filter_param:
+    #     langcode: "fra-lin"
+    # - name: "michsethowusu-french-lingala"
+    #   path: "michsethowusu/french-lingala_sentence-pairs"
+    #   split: "train"
+    #   src_col: "French"
+    #   tgt_col: "Lingala"
+    #   format: "flat_column"
+    #   extra_args: {}
+
+
+  opus:
+    - name: "Tatoeba"
+      url: "https://object.pouta.csc.fi/OPUS-Tatoeba/v2023-04-12/moses/fr-ln.txt.zip"
+    - name: "tico-19"
+      url: "https://object.pouta.csc.fi/OPUS-tico-19/v2020-10-28/moses/fr-ln.txt.zip"
+     
+
+
+  local:
+    - name: "Gamayun-translators-french-lingala"
+      src_path: "/mnt/vol/tiny/mt-data-processing/fr-kit5k-v1/gamayun_kit5k-v1_fra-lin_FRA.txt"
+      tgt_path: "/mnt/vol/tiny/mt-data-processing/fr-kit5k-v1/gamayun_kit5k-v1_fra-lin_LIN.txt"
+    
+   
+
+
+
+download:
+  output_dir: "raw/"
+  dataset_cache: "dataset_cache"
+  model_cache: "model_cache"
+
+preprocessing:
+  lowercase: true
+  apply_rule_filter: true
+  apply_semantic_filter: false
+  apply_lang_detect_filter: true
+  apply_quality_estimation_filter: true
+  from_cache: true
+
+filters:
+  rule_filter:
+    min_length: 3
+    max_length: 200
+    max_length_ratio: 2.0
+  semantic_filter:
+    threshold: 0.6
+    chunk_size: 4096
+  lang_detect_filter:
+    source:
+      model: "fasttext"
+      lang_code: "fr"
+      batch_size: 2048
+      min_score: 0.6     
+    target:   
+      model: "afrolid"
+      lang_code: "lin"
+      batch_size: 1024
+      min_score: 0.6
+  quality_estimation_filter:
+    model: "comet"
+    batch_size: 16
+    min_score: 0.6
+
+validation:
+  quality_estimation: true
+
+merge_and_dedup:
+  merge: true
+  dedup: true
+  dedup_against_test: true
+  
+
+
+output:
+  filtered_prefix: "filtered"
+  save_format: "hf"  # or txt, csv, json
+  save_dir: "preprocess_outputs/"
+
+
+logging:
+  debug: true
+  log_dir: "logs/"
+  log_file: "fr-ln-filtering-0.6.log"
+
+test_dataset:
+  name: "flores"
+  path: "facebook/flores"
+  split: "devtest"
+  src_config: "fra_Latn"
+  tgt_config: "lin_Latn"
+  column: "sentence"
+  format: "dual_config"
+
+  
