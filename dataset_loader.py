@@ -2,18 +2,26 @@ import os
 from datasets import load_dataset
 from fetch import download_url, download_opus, download_table
 
-def load_flat_column_dataset(cfg, dataset_cache=None):
+def load_flat_column_dataset(cfg, dataset_cache=None, filter_param=None):
     extra_args = cfg.get("extra_args", {})
     if dataset_cache:
         extra_args["cache_dir"] = dataset_cache
-    
+
+    # Load dataset (with or without config)
     if "config_name" in cfg:
         dataset = load_dataset(cfg["path"], cfg["config_name"], split=cfg["split"], **extra_args)
     else:
         dataset = load_dataset(cfg["path"], split=cfg["split"], **extra_args)
 
+    # Optional filtering
+    if filter_param:
+        key, value = next(iter(filter_param.items()))
+        dataset = dataset.filter(lambda example: example.get(key) == value)
+
+    # Extract columns
     source_list = [item[cfg["src_col"]] for item in dataset]
     target_list = [item[cfg["tgt_col"]] for item in dataset]
+    
     return source_list, target_list
 
     
@@ -102,6 +110,14 @@ def load_table_dataset(cfg, raw_dir=None):
 
     return source_list, target_list
 
+def load_local_dataset(cfg):
+    with open(cfg["src_path"], "r") as f:
+        source_list = f.read().splitlines()
+    with open(cfg["tgt_path"], "r") as f:
+        target_list = f.read().splitlines()
+    
+    return source_list, target_list
+
 def load_dataset_standard(cfg, srclang, tgtlang, raw_dir=None, dataset_cache=None):
     source = cfg.get("source", "hf")
     if source == "hf":
@@ -112,5 +128,7 @@ def load_dataset_standard(cfg, srclang, tgtlang, raw_dir=None, dataset_cache=Non
         return load_url_dataset(cfg, srclang, tgtlang, raw_dir)
     elif source == "table":
         return load_table_dataset(cfg, raw_dir)
+    elif source == "local":
+        return load_local_dataset(cfg)
     else:
         raise NotImplementedError(f"Unknown source: {source}")
