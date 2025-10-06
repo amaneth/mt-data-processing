@@ -1,0 +1,36 @@
+en-am:
+  path: "aminopia/en-am-processed"
+  split: "train"
+  src_col: "en"
+  tgt_col: "am"
+  src_lang: "eng_Latn"
+  tgt_lang: "amh_Ethi"
+  sample: 1.0
+
+am-en:
+  path: "aminopia/am-en-processed"
+  split: "train"
+  src_col: "am"
+  tgt_col: "en"
+  src_lang: "amh_Ethi"
+  tgt_lang: "eng_Latn"
+  sample: 1.0
+
+en-sw:
+    path: "aminopia/en-sw-processed"
+    split: "train"
+    src_col: "en"
+    tgt_col: "sw"
+    src_lang: "eng_Latn"
+    tgt_lang: "swa_Latn"
+    sample: 1.0
+sw-en:
+    path: "aminopia/sw-en-processed"
+    split: "train"
+    src_col: "sw"
+    tgt_col: "en"
+    src_lang: "swa_Latn"
+    tgt_lang: "eng_Latn"
+    sample: 1.0
+
+
